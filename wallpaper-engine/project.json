@@ -83,7 +83,7 @@
         "type": "slider",
         "min": 0,
         "max": 100,
-        "value": 60
+        "value": 15
       },
       "mousefill": {
         "order": 110,
@@ -91,7 +91,7 @@
         "type": "slider",
         "min": 0,
         "max": 150,
-        "value": 130
+        "value": 120
       },
       "fogfade": {
         "order": 111,

@@ -5,7 +5,7 @@ const CONFIG = {
   rippleRadius: 1,      // 点击圆环的大小倍数（设置里的「半径」）
   rippleSpeed: 1,       // 点击圆环的快慢倍数：越大扩得越快、消失得越早（设置里的「扩散速度」）
   rippleStrength: 1.4,  // 点击圆环亮度（对照视频：圈上蓝字的中间亮度）
-  mouseFill: 1.3,      // 鼠标雾显示的满度（对照视频 9～17 秒来回划时的整屏覆盖率）
+  mouseFill: 1.2,      // 鼠标雾显示的满度（同一处来回划 4 趟以上时的亮度）
   rippleWind: 1,     // 点击圆环带动烟雾的强度：圈往外扩散时把灰色的字一起推出去（0 = 不推）
   ripplePushShare: 1,    // 圆环每帧带走推力带里多少烟（1 = 圈扫过的灰字全部推走；小于 1 时会在圈里留下一道路径）
   rippleScatter: 1,   // 点击圆环的分散度：越大圈越歪、越容易断开碎散（0 = 规整的圆）
@@ -43,7 +43,7 @@ const CONFIG = {
   flicker: 0.09,         // 每帧字符随机变化比例（30 帧时每个字约每秒换 2 次，和视频一样）
   baseDensity: 1,        // 字符密度
   hoverRadius: 120,      // 鼠标影响半径（像素）
-  hoverStrength: 0.6,    // 鼠标滑过加深程度（0~1）
+  hoverStrength: 0.15,   // 鼠标滑过加深程度（0~1）：划一趟几乎看不出，同一处来回划几趟才亮起来
   // 鼠标雾的亮度与斑块（对照视频测量调出来的）
   fogBase: 0.8, fogGain: 2.0, fogCap: 0.53, fogDepthLo: 0.4, fogDepthHi: 0.6, fogDepthScale: 0.6,
   fogFill: 24,           // 雾里出字的多少（越大越满）
