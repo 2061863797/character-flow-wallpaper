@@ -75,7 +75,17 @@ function rippleTables(now) {
     const wp = rp.r1 * rp.warp * 0.6;                       // 被吹歪的最大距离（扭曲场实际很少超过 ±0.3）
     const hi = rp.r1 * maxK + 90 * bandK + wp, lo = Math.max(0, rp.r2 * minK - 90 * bandK - wp);
     rp.hi2 = hi * hi; rp.lo2 = lo * lo;                      // 离圈太远的字直接跳过
-    if (!rp.shape) { rp.shape = new Float32Array(ANG_BINS); rp.seg = new Float32Array(ANG_BINS); }
+    // 圈前沿的扩散速度（屏幕像素/秒），给 ringPush 推烟用：r1 对时间求导，再乘上设置带来的快慢
+    const rate = (CONFIG.speed / 0.06) / CONFIG.rippleLife;
+    rp.v1 = 680 / 0.98 * Math.exp(-t / 0.98) * sizeK * rate;
+    if (!rp.shape) {
+      rp.shape = new Float32Array(ANG_BINS); rp.seg = new Float32Array(ANG_BINS); rp.tang = new Float32Array(ANG_BINS);
+      // 推烟时顺着圈方向的分量：沿圈一段正一段反，推出去的烟会卷成小涡（每个圈固定一套，不随时间变）
+      for (let k = 0; k < ANG_BINS; k++) {
+        const ang = (k / ANG_BINS - 0.5) * 2 * Math.PI;
+        rp.tang[k] = (noise(Math.cos(ang) * 2 + rp.seed, Math.sin(ang) * 2, rp.seed) - 0.5) * 1.6;
+      }
+    }
     for (let k = 0; k < ANG_BINS; k++) {
       const ang = (k / ANG_BINS - 0.5) * 2 * Math.PI, c = Math.cos(ang), s = Math.sin(ang);
       // 形状：圆形带不规则的鼓包（视频里 0.5 秒后轮廓明显歪扭，有好几个鼓包）；爱心按轮廓表

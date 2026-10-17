@@ -28,6 +28,13 @@ SCENES = {
         shots=[60 + (f - 1148) for f in (1172, 1190, 1210)],
         video=[1172, 1190, 1210],
         crop=(1000, 240, 560, 260), scale=1.0),
+    # 先在点击处周围来回划，铺一层灰雾，再点击：看圈往外扩散时有没有把灰字带着走
+    'clickpush': dict(
+        actions={**{i: ('move', 1272 + 380 * np.cos(i / 6), 706 + 260 * np.sin(i / 4)) for i in range(0, 50)},
+                 52: ('move', 1272, 706), 60: ('click', 1272, 706)},
+        shots=[60 + k for k in (12, 24, 36, 48)],
+        video=[],
+        crop=(812, 306, 920, 800), scale=0.6),
     # 视频 0.75～2.2 秒的一次滑动和之后的消散
     'stroke': dict(
         actions='stroke',
@@ -47,6 +54,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument('scene')
 ap.add_argument('--set', nargs='*', default=[], help='覆盖 CONFIG，如 fogFade=0.4')
 ap.add_argument('--no-video', action='store_true')
+ap.add_argument('--tag', default='', help='输出文件名后缀')
 a = ap.parse_args()
 sc = SCENES[a.scene]
 actions = stroke_actions() if sc['actions'] == 'stroke' else sc['actions']
@@ -105,7 +113,7 @@ for k in range(0, len(ours), cols):
             vv.append(np.zeros_like(ours[0]))
         rows.append(np.hstack(vv))
     rows.append(np.hstack(o))
-out = V.ROOT / 'out' / f'{a.scene}.png'
+out = V.ROOT / 'out' / f'{a.scene}{a.tag}.png'
 out.parent.mkdir(exist_ok=True)
 cv2.imwrite(str(out), np.vstack(rows))
 print(out)

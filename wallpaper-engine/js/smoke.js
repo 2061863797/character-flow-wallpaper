@@ -9,7 +9,9 @@ let SIM = 8;                        // 每个模拟格边长（页面像素）�
 //   FT     雾里的纹理                          FL 雾里的暗区
 //   RG     边缘细碎扰动                        HZ 烟带外围薄雾
 //   PSI    背景旋涡                            P、DIV 投影步骤的中间结果
-let NX, NY, U, V, U2, V2, D, D2, M, FT, FL, RG, HZ, SN, P, DIV, PSI;
+//   RU, RV 点击圆环推烟的速度（不参与投影，直接把烟往外推）
+//   PM     这一格最近被圆环推过的程度（推过的地方暂停补烟，烟才真的被推走）
+let NX, NY, U, V, U2, V2, D, D2, M, FT, FL, RG, HZ, SN, P, DIV, PSI, RU, RV, PM;
 let bgLo = 0.48, bgHi = 0.9;   // 烟源门槛和最浓处：都按整屏分布自动调节，烟的多少和浓淡始终稳定
 let cvLo = 0.48, cvHi = 0.9;   // coverThreshold() 算出的目标门槛，bgLo/bgHi 慢慢向它靠拢
 const SN_HIST = new Uint32Array(256);
@@ -28,6 +30,7 @@ function initSmoke() {
   U = new Float32Array(n); V = new Float32Array(n); U2 = new Float32Array(n); V2 = new Float32Array(n);
   D = new Float32Array(n); D2 = new Float32Array(n); M = new Float32Array(n); FT = new Float32Array(n); FL = new Float32Array(n); RG = new Float32Array(n); HZ = new Float32Array(n); SN = new Float32Array(n); P = new Float32Array(n); DIV = new Float32Array(n);
   PSI = new Float32Array(n);
+  RU = new Float32Array(n); RV = new Float32Array(n); PM = new Float32Array(n);
   // 先把整屏的气流纹理算一遍，直接定好门槛，再预热几秒，打开时烟已经铺开
   // 预热 2 秒，时间正好结束在当前时刻，接上之后的真实画面（不会出现重影）
   const now0 = performance.now() / 1000, warm = 60;
@@ -153,6 +156,63 @@ function mouseSmoke(dt, sec) {
   }
 }
 
+// 点击圆环推烟：圈往外扩散时，像推土机一样把前面的灰烟和鼠标雾一起往外推，并顺着圈卷出小旋涡。
+// 这股推力不能放进风场 U,V：投影那一步会把「从一点往外散」的流动几乎全部抵消掉，
+// 所以单独存成 RU,RV，在平流之后再把烟按它搬一次。返回这一帧有没有推力。
+function ringPush(dt) {
+  const K = CONFIG.rippleWind;
+  if (K <= 0 || !CONFIG.rippleEnabled) return false;
+  let any = false;
+  RU.fill(0); RV.fill(0);
+  const decay = Math.exp(-dt / 0.6);
+  for (let i = 0; i < PM.length; i++) PM[i] *= decay;
+  for (const rp of ripples) {
+    if (!rp.alive || rp.v1 === undefined) continue;
+    // 推的速度 = 圈前沿的速度（格/秒）× 强度：强度 1 时圈前面的烟正好被圈赶着走，堆成一道灰色的浪头
+    const v = rp.v1 / dpr / SIM * K;
+    if (v < 0.5) continue;
+    any = true;
+    const cx = rp.x / SIM + 0.5, cy = rp.y / SIM + 0.5;
+    const R = rp.r1 / dpr / SIM, w = Math.max(2, R * 0.12 + 1.5);   // 推力带宽度：圈前沿前后各一段
+    const reach = R * (rp.heart ? 1.4 : 1.25) + w * 2.5;
+    const x0 = Math.max(1, Math.floor(cx - reach)), x1 = Math.min(NX - 2, Math.ceil(cx + reach));
+    const y0 = Math.max(1, Math.floor(cy - reach)), y1 = Math.min(NY - 2, Math.ceil(cy + reach));
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      const dx = x - cx, dy = y - cy, d = Math.hypot(dx, dy) + 1e-3;
+      const ang = Math.atan2(dy, dx);
+      const f0 = (ang / (2 * Math.PI) + 0.5) * ANG_BINS, k = f0 | 0, u = f0 - k;
+      const shape = rp.shape[k % ANG_BINS] + (rp.shape[(k + 1) % ANG_BINS] - rp.shape[k % ANG_BINS]) * u;
+      const q = (d - R * shape) / w;                       // 0 = 正好在圈上，负 = 圈里面
+      if (q > 2.5 || q < -3) continue;
+      // 圈前面（q>0）也推：烟被推到蓝圈外面一点，才看得出是灰字被带着走，而不是被染成蓝
+      const f = q > 0 ? Math.exp(-q * q * 0.35) : Math.exp(-q * q * 0.3);
+      // 往外推，再加一点顺着圈的推力，方向沿圈一段正一段反 → 推出去的烟会卷成一个个小涡（像卷入模式）
+      const tang = rp.tang[k % ANG_BINS];
+      const i = IX(x, y), s = v * f;
+      RU[i] += (dx * (1 - Math.abs(tang) * 0.3) - dy * tang) / d * s;
+      RV[i] += (dy * (1 - Math.abs(tang) * 0.3) + dx * tang) / d * s;
+      if (f > PM[i]) PM[i] = f;
+    }
+  }
+  return any;
+}
+
+// 按 RU,RV 把烟「整份搬走」：每格的烟往前挪，按落点分给周围 4 格（总量不变）。
+// 不能用平流那种往上游取值的做法：那样只会把烟拉长铺开，圈扫过的地方不会变空，也堆不出浪头
+function pushField(dst, src, dt) {
+  dst.fill(0);
+  for (let y = 1; y < NY - 1; y++) for (let x = 1; x < NX - 1; x++) {
+    const i = IX(x, y), a = src[i];
+    if (a === 0) continue;
+    if (!RU[i] && !RV[i]) { dst[i] += a; continue; }
+    const fx = Math.max(1, Math.min(NX - 2.001, x + RU[i] * dt)), fy = Math.max(1, Math.min(NY - 2.001, y + RV[i] * dt));
+    const x0 = fx | 0, y0 = fy | 0, ax = fx - x0, ay = fy - y0, j = IX(x0, y0);
+    dst[j] += a * (1 - ax) * (1 - ay); dst[j + 1] += a * ax * (1 - ay);
+    dst[j + NX] += a * (1 - ax) * ay; dst[j + NX + 1] += a * ax * ay;
+  }
+  for (let i = 0; i < dst.length; i++) if (dst[i] > 1.2) dst[i] = 1.2;   // 浪头堆得再多也不会亮得刺眼
+}
+
 // 在 (cx,cy) 放一个旋涡：中心附近转得最快，往外平滑衰减；strength>0 为逆时针（网格坐标）
 function addVortex(cx, cy, rc, strength) {
   const x0 = Math.max(1, Math.floor(cx - rc * 2)), x1 = Math.min(NX - 2, Math.ceil(cx + rc * 2));
@@ -209,6 +269,7 @@ function stepSmoke(dt, sec) {
     V[i] += (wv + tv - V[i]) * r;
   }
   mouseSmoke(dt, sec);
+  const pushing = ringPush(dt);
   confineVorticity(dt);
   // 风自己也被风带着走，然后投影成不可压缩的流动
   advect(U2, U, dt); advect(V2, V, dt);
@@ -225,7 +286,7 @@ function stepSmoke(dt, sec) {
     const n = SN[i] = streakNoise((x - 0.5) * SIM, (y - 0.5) * SIM, sec);
     const k = Math.max(0, Math.min(1, (n - bgLo) / Math.max(0.03, (bgHi - bgLo) * CONFIG.bgEdge)));
     const s = k * k * (3 - 2 * k);
-    if (s > D[i]) D[i] += (s - D[i]) * feed;
+    if (s > D[i]) D[i] += (s - D[i]) * feed * (1 - PM[i]);   // 刚被圆环推过的地方先不补烟
   }
   // 自动稳定烟量：找出「让烟源覆盖率等于设定值」的门槛，门槛慢慢靠过去（一两秒），画面里的烟不会忽多忽少
   coverThreshold();
@@ -236,12 +297,13 @@ function stepSmoke(dt, sec) {
   advect(D2, D, dt);
   // 化开得慢一点，旋涡和烟缕才保得住；网格变粗时按比例减小，保证在屏幕上化开的快慢不变
   const spread = Math.min(0.5, dt * 0.35 * (8 / SIM) * (8 / SIM));
-  const keep = Math.exp(-dt / 0.9);                  // 离开烟源的烟很快淡掉，只留短短的烟尾
+  // 离开烟源的烟很快淡掉，只留短短的烟尾；被圆环推着走的烟淡得慢一些，才看得出被推出去
   for (let y = 1; y < NY - 1; y++) for (let x = 1; x < NX - 1; x++) {
     const i = IX(x, y);
     const nb = (D2[i - 1] + D2[i + 1] + D2[i - NX] + D2[i + NX]) * 0.25;
-    D[i] = lerp(D2[i], nb, spread) * keep;
+    D[i] = lerp(D2[i], nb, spread) * Math.exp(-dt / (0.9 * (1 + 1.5 * PM[i])));
   }
+  if (pushing) { pushField(D2, D, dt); [D, D2] = [D2, D]; }
   // 鼠标的烟：同样被风带走、化开，但约 2 秒才淡掉，整条路径都看得到
   advect(D2, M, dt);
   // 鼠标雾大约 fogFade 秒散完（衰减到约 8%，看不见了）；卷入模式要留着让旋涡卷，固定 2.8 秒的时间常数
@@ -251,6 +313,7 @@ function stepSmoke(dt, sec) {
     const nb = (D2[i - 1] + D2[i + 1] + D2[i - NX] + D2[i + NX]) * 0.25;
     M[i] = lerp(D2[i], nb, Math.min(0.5, spread * (CONFIG.swirlMode ? 0.5 : CONFIG.fogSpread))) * keepM;
   }
+  if (pushing) { pushField(D2, M, dt); [M, D2] = [D2, M]; }
   // 雾里的纹理只在有雾的格子算，按模拟格算一次，画字时直接查表（比每个字单独算快很多）
   if (!CONFIG.swirlMode)
     for (let y = 1; y < NY - 1; y++) for (let x = 1; x < NX - 1; x++) {

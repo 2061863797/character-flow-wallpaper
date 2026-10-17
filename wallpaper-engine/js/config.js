@@ -6,8 +6,8 @@ const CONFIG = {
   rippleLife: 1,
   rippleStrength: 1,
   mouseFill: 1,
-  rippleScatter: 1,     // 点击圆环的分散度：越大圈越歪、越容易断开碎散（0 = 规整的圆）
-  heartChance: 0.33,   // 点击时出现爱心形圆环的概率（视频里大约三次有一次是爱心）
+  rippleWind: 1,     // 点击圆环带动烟雾的强度：圈往外扩散时把灰色的字一起推出去（0 = 不推）
+  rippleScatter: 1,    // 点击圆环的分散度：越大圈越歪、越容易断开碎散（0 = 规整的圆）
   // 字符尺寸按「屏幕实际像素」定，视频实测：格子 8×16，字高约 10
   devCellW: 8,
   devCellH: 16,

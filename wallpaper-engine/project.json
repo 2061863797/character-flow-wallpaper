@@ -159,14 +159,6 @@
         "max": 150,
         "value": 100
       },
-      "heartchance": {
-        "order": 130,
-        "text": "爱心圆环出现概率",
-        "type": "slider",
-        "min": 0,
-        "max": 100,
-        "value": 33
-      },
       "ripplescatter": {
         "order": 125,
         "text": "圆环分散度",
@@ -182,6 +174,14 @@
         "min": 2,
         "max": 50,
         "value": 10
+      },
+      "ripplewind": {
+        "order": 127,
+        "text": "圆环带动烟雾",
+        "type": "slider",
+        "min": 0,
+        "max": 200,
+        "value": 100
       }
     }
   }
