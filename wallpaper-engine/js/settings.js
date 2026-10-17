@@ -21,7 +21,6 @@ window.wallpaperPropertyListener = {
     if (p.ripplespeed) CONFIG.rippleSpeed = p.ripplespeed.value / 100;
     if (p.ripplestrength) CONFIG.rippleStrength = p.ripplestrength.value / 100;
     if (p.mousefill) CONFIG.mouseFill = p.mousefill.value / 100;
-    if (p.ripplewind)  CONFIG.rippleWind = p.ripplewind.value / 100;
     if (p.ripplescatter) CONFIG.rippleScatter = p.ripplescatter.value / 100;
     if (p.fogfade)     CONFIG.fogFade = p.fogfade.value / 10;               // 滑块单位 0.1 秒
     if (p.charsize)    { CONFIG.charScale = p.charsize.value / 100; if (atlas) { layoutChars(); rebuild = false; } }

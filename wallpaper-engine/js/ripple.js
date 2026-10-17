@@ -20,8 +20,8 @@ const RING_FILL = [[0, .012], [.4, .01], [.7, .006], [1, .002], [1.3, 0]];
 const RING_CONV = [[0, 1], [1, 1], [1.4, .6], [1.7, 0]];
 // 沿着圈一段亮一段暗的反差：越到后面越大，圈断成一段段（视频实测：0.8 秒约 9% 断开，1.2 秒 17%，1.6 秒 33%）
 const RING_SEG = [[0, 1], [.4, 1.3], [.8, 1.8], [1.2, 2.5], [1.6, 3.4], [2.6, 4.5]];
-// rippleAt 顺带算出的：变灰部分、灰烟染蓝、这里的圈有多「晚」（0 = 刚出来，1 = 已经扩散开，亮度改由背景灰字决定）
-let rippleGray = 0, rippleConv = 0, rippleLate = 0;
+// rippleAt 顺带算出的：变灰部分、灰烟染蓝
+let rippleGray = 0, rippleConv = 0;
 // 爱心轮廓：每隔 15° 一个半径倍数（从正左方 -180° 开始，0° 是正右，90° 是正下），视频里三次爱心取平均
 const HEART = [0.97, 1.11, 1.26, 1.35, 1.35, 1.23, 1.07, 1.24, 1.33, 1.32, 1.24, 1.1, 0.95, 0.82, 0.76, 0.73, 0.73, 0.78, 0.86, 0.79, 0.73, 0.74, 0.76, 0.85];
 function table(tb, t) {
@@ -110,7 +110,7 @@ function rippleTables(now) {
   }
 }
 function rippleAt(x, y) {
-  let v = 0, lateW = 0, gW = 0; rippleGray = 0; rippleConv = 0;
+  let v = 0; rippleGray = 0; rippleConv = 0;
   let warpN = -1, rag = 0, thick = 0, streak = 0;
   for (const rp of ripples) {
     if (!rp.alive) continue;
@@ -158,8 +158,6 @@ function rippleAt(x, y) {
     g *= 1 - lk * 0.85 + lk * 0.85 * brk * 1.6;
     v += g * (1 - rp.gray);
     rippleGray += g * rp.gray;
-    lateW += g * lk; gW += g;
   }
-  rippleLate = gW > 0 ? lateW / gW : 0;
   return Math.min(1, v * 0.68 * CONFIG.rippleStrength);   // 0.68：对照视频校准的整体亮度
 }

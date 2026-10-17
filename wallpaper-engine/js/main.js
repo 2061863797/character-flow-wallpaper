@@ -1,5 +1,5 @@
 // ===== 主循环 =====
-let last = 0, rowOff, ripG = 0, ripGr = 0, ripCv = 0, ripLt = 0;
+let last = 0, rowOff, ripG = 0, ripGr = 0, ripCv = 0;
 function frame(now) {
   requestAnimationFrame(frame);
   // 限帧：留 2 毫秒余量。60Hz 屏幕两帧间隔加起来≈33.33ms，严格比较会因为小数误差被跳过，30 帧实际只剩 20 帧
@@ -27,7 +27,7 @@ function frame(now) {
       let glow = 0, ripGray = 0;
       if (hasRipple) {
         // 蓝圈每两格算一次、相邻两格共用（一格才 8 像素宽，看不出区别，计算量减半）
-        if ((c & 1) === 0) { ripG = rippleAt(x + W / 2, y); ripGr = rippleGray; ripCv = rippleConv; ripLt = rippleLate; }
+        if ((c & 1) === 0) { ripG = rippleAt(x + W / 2, y); ripGr = rippleGray; ripCv = rippleConv; }
         const jj = 0.8 + 0.4 * jitter2[i];
         glow = ripG * jj; ripGray = Math.min(0.3, ripGr * 0.85 * CONFIG.rippleStrength * 3.5 * jj);
       }
@@ -92,8 +92,8 @@ function frame(now) {
       // 圈里所有的灰字（背景烟、鼠标雾、外围薄雾）整片染成蓝（视频里烟和雾所在的地方都变成一大块均匀的蓝），之后慢慢变回灰；字一直都在。
       // 按平滑的浓度来染，不按每个字自己的亮度——否则原本稀疏、忽明忽暗的字会被一个个点亮，显得突兀
       const dens = Math.max(sk, CONFIG.swirlMode ? 0 : Math.min(1, ms * 2.2), hz * 0.4);
-      // 圈扩散开以后，亮不亮取决于这里原来有没有灰字（视频里后期的圈是由背景的灰字显出来的，空白处的圈很淡）
-      if (hasRipple && ripLt > 0) glow *= 1 - ripLt * (1 - Math.min(1, 0.45 + dens * 2.5));
+      // 圈是「通过灰字传递」的：灰字不动，圈经过时把它们点亮。有灰字的地方圈亮，空白处的圈只剩 rippleCarry 那么淡
+      if (hasRipple) glow *= CONFIG.rippleCarry + (1 - CONFIG.rippleCarry) * Math.min(1, dens * 2.5);
       if (hasRipple && ripCv > 0 && dens > 0) {
         glow = Math.min(1, glow + dens * 0.4 * ripCv * CONFIG.rippleStrength);
         smokeVis *= 1 - ripCv;

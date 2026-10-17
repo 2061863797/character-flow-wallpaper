@@ -158,14 +158,6 @@
         "min": 0,
         "max": 200,
         "value": 100
-      },
-      "ripplewind": {
-        "order": 120,
-        "text": "点击圆环 · 带动烟雾",
-        "type": "slider",
-        "min": 0,
-        "max": 200,
-        "value": 100
       }
     }
   }
