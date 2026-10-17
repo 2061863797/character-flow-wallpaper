@@ -6,12 +6,12 @@ let SIM = 8;                        // 每个模拟格边长（页面像素）�
 // 网格上的各张数据表（每格一个数）：
 //   U, V   风速（U2、V2 是计算用的副本）      D  背景烟浓度（D2 是副本）
 //   M      鼠标放出的烟（单独算，消散更慢）  SN 气流纹理原始值
-//   FT     雾里的纹理                          FL 雾里的暗区
+//   FT     雾里的纹理
 //   RG     边缘细碎扰动                        HZ 烟带外围薄雾
 //   PSI    背景旋涡                            P、DIV 投影步骤的中间结果
 //   RU, RV 点击圆环推烟的速度（不参与投影，直接把烟往外推）
 //   PM     这一格最近被圆环推过的程度（推过的地方暂停补烟，烟才真的被推走）
-let NX, NY, U, V, U2, V2, D, D2, M, FT, FL, RG, HZ, SN, P, DIV, PSI, RU, RV, PM;
+let NX, NY, U, V, U2, V2, D, D2, M, FT, RG, HZ, SN, P, DIV, PSI, RU, RV, PM;
 let bgLo = 0.48, bgHi = 0.9;   // 烟源门槛和最浓处：都按整屏分布自动调节，烟的多少和浓淡始终稳定
 let cvLo = 0.48, cvHi = 0.9;   // coverThreshold() 算出的目标门槛，bgLo/bgHi 慢慢向它靠拢
 const SN_HIST = new Uint32Array(256);
@@ -28,7 +28,7 @@ function initSmoke() {
   NY = Math.ceil(innerHeight / SIM) + 2;
   const n = NX * NY;
   U = new Float32Array(n); V = new Float32Array(n); U2 = new Float32Array(n); V2 = new Float32Array(n);
-  D = new Float32Array(n); D2 = new Float32Array(n); M = new Float32Array(n); FT = new Float32Array(n); FL = new Float32Array(n); RG = new Float32Array(n); HZ = new Float32Array(n); SN = new Float32Array(n); P = new Float32Array(n); DIV = new Float32Array(n);
+  D = new Float32Array(n); D2 = new Float32Array(n); M = new Float32Array(n); FT = new Float32Array(n); RG = new Float32Array(n); HZ = new Float32Array(n); SN = new Float32Array(n); P = new Float32Array(n); DIV = new Float32Array(n);
   PSI = new Float32Array(n);
   RU = new Float32Array(n); RV = new Float32Array(n); PM = new Float32Array(n);
   // 先把整屏的气流纹理算一遍，直接定好门槛，再预热几秒，打开时烟已经铺开
@@ -318,8 +318,7 @@ function stepSmoke(dt, sec) {
   if (!CONFIG.swirlMode)
     for (let y = 1; y < NY - 1; y++) for (let x = 1; x < NX - 1; x++) {
       const i = IX(x, y);
-      if (M[i] > 0.015) { FT[i] = fogTex((x - 0.5) * SIM, (y - 0.5) * SIM, sec); FL[i] = fogDarkAt((x - 0.5) * SIM, (y - 0.5) * SIM, sec); }
-      else { FT[i] = 0; FL[i] = 0; }
+      FT[i] = M[i] > 0.015 ? fogTex((x - 0.5) * SIM, (y - 0.5) * SIM, sec) : 0;
     }
   // 边缘细碎扰动：小尺度噪声（约 2~4 个字大小），随风漂移、慢慢变化；隔帧更新省时间
   if (simFrame % 2 === 0) {
@@ -379,18 +378,6 @@ function fogTex(x, y, sec) {
   return depth * (0.45 + 0.55 * lines);
 }
 
-// 雾里的「暗区」：一个平滑连续的暗度场（0 = 不变暗，1 = 最暗），随风飘动。
-// 尺度比斜纹大好几倍 → 暗区横跨好几个到十几个字；边缘是渐变，不会有单个字突然变暗
-function fogDarkAt(x, y, sec) {
-  const drift = sec * CONFIG.airSpeed / dpr;
-  const u = x * SA + y * SB - drift, v = -x * SB + y * SA;
-  const s = CONFIG.fogDarkScale;
-  const n = noise(u * 0.011 * s + 500, v * 0.024 * s, sec * 0.06)
-          + (noise(u * 0.03 * s + 700, v * 0.05 * s, sec * 0.1) - 0.5) * 0.25;   // 边缘轻微不规则
-  // 噪声越低越暗；在门槛附近用一段较宽的平滑过渡
-  const k = Math.max(0, Math.min(1, (CONFIG.fogHoles + CONFIG.fogDarkSoft - n) / (2 * CONFIG.fogDarkSoft)));
-  return k * k * (3 - 2 * k);
-}
 
 // 背景烟源（按视频调过：覆盖约 3%）：只取气流纹理里最浓的那一小部分
 // 求门槛：让整屏里「纹理值高于门槛」的格子正好占 smokeAmount 这么多（用直方图找分位点）

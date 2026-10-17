@@ -39,16 +39,13 @@ function frame(now) {
       let fogVis = 0;
       if (ms > 0.02 && !CONFIG.swirlMode) {
         const ft = sample(FT, gx, gy);
-        // 暗区：从暗度场平滑取值，越靠暗区中心越暗；字仍然在，只是更暗
-        const dark = sample(FL, gx, gy);
-        // 填充比例超过 100% 的部分（0～1）：越往上，暗区越浅、最暗的字越亮，拉满时雾里是一片均匀的字，没有发黑的空洞
+        // 填充比例超过 100% 的部分（0～1）：越往上，最暗的字越亮、薄雾也填满，拉满时雾里是一片均匀的字
         const over = Math.max(0, Math.min(1, (CONFIG.mouseFill - 1) / 0.5));
         if (dither[i] < ms * CONFIG.fogFill * (0.45 + 0.55 * ft) || over > 0.5) {
           // 超过 100% 时薄雾也提亮：鼠标只经过一两下的地方同样填满
           const strength = Math.min(1, Math.pow(ms * (2.2 + 6 * over), CONFIG.fogCurve));
           fogVis = Math.min(CONFIG.fogCap, Math.max(lerp(CONFIG.fogMinVis, 0.32, over) * strength,
             0.5 * strength * (CONFIG.fogBase + CONFIG.fogGain * ft) * jitter[i]));
-          fogVis *= 1 - (1 - CONFIG.fogDarkDim) * dark * (1 - over);
         }
       }
       const gxs = gx + rowOff[r] / SIM;
