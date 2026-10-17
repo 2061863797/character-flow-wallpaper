@@ -2,8 +2,8 @@
 const CONFIG = {
   bgContrast: 1,
   rippleEnabled: true,
-  rippleRadius: 1,
-  rippleLife: 1,
+  rippleRadius: 1,      // 点击圆环的大小倍数（设置里的「半径」）
+  rippleSpeed: 1,       // 点击圆环的快慢倍数：越大扩得越快、消失得越早（设置里的「扩散速度」）
   rippleStrength: 1,
   mouseFill: 1,
   rippleWind: 1,     // 点击圆环带动烟雾的强度：圈往外扩散时把灰色的字一起推出去（0 = 不推）
@@ -36,8 +36,6 @@ const CONFIG = {
   smokeAmount: 0.4,      // 背景烟量：烟源占画面的比例（自动保持稳定）
   airSpeed: 58,          // 风速：烟整体往右下飘的速度（屏幕像素/秒，视频实测约 58）
   glow: [40, 116, 164],  // 点击扩散的光带颜色（蓝，视频实测最亮处）
-  speed: 0.06,           // 点击扩散的快慢
-  scale: 0.0035,         // 点击扩散的范围（越小圈越大）
   bandWidth: 0.4,        // 光带粗细（0~1）
   flicker: 0.02,         // 每帧字符随机变化比例
   baseDensity: 1,        // 字符密度

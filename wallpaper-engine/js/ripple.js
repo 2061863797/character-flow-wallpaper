@@ -32,8 +32,8 @@ function heartShape(ang) {
   // 1.1：圈有厚度，量出来的轮廓会被抹平一点，这里放大一点补回来
   return 1 + (HEART[k] + (HEART[(k + 1) % 24] - HEART[k]) * u - 1) * 1.1;
 }
-// 点击后经过的「视频秒数」：扩散速度、持续时间两个设置会让它变快变慢
-const rippleAge = (rp, now) => (now - rp.born) / 1000 * (CONFIG.speed / 0.06) / CONFIG.rippleLife;
+// 点击后经过的「视频秒数」：「扩散速度」设置让它整体变快变慢（圈扩得快，也消失得早）
+const rippleAge = (rp, now) => (now - rp.born) / 1000 * CONFIG.rippleSpeed;
 const ANG_BINS = 180;
 // 每帧给每个圈算一次：各个方向上的半径倍数（形状）和亮度（一段亮一段暗）
 // 扭曲场：顺着风向拉长、跟着风飘的噪声（和背景烟同一个方向），让圈像被气流吹散的烟
@@ -54,7 +54,7 @@ function rippleWarpField(sec, which) {
 function rippleTables(now) {
   if (!RW || RW.length !== NX * NY) { for (let k = 0; k < 3; k++) rippleWarpField(now / 1000, k); rwFrame = simFrame; }
   else if (simFrame !== rwFrame) { rippleWarpField(now / 1000, simFrame % 3); rwFrame = simFrame; }
-  const sizeK = 0.0035 / CONFIG.scale * CONFIG.rippleRadius;  // 扩散范围
+  const sizeK = CONFIG.rippleRadius;                         // 圆环半径倍数
   const bandK = CONFIG.bandWidth / 0.4;                      // 光带粗细
   const S = CONFIG.rippleScatter;                            // 分散度：圈变形、断开、碎散的程度（0 = 规整的圆）
   for (const rp of ripples) {
@@ -76,7 +76,7 @@ function rippleTables(now) {
     const hi = rp.r1 * maxK + 90 * bandK + wp, lo = Math.max(0, rp.r2 * minK - 90 * bandK - wp);
     rp.hi2 = hi * hi; rp.lo2 = lo * lo;                      // 离圈太远的字直接跳过
     // 圈前沿的扩散速度（屏幕像素/秒），给 ringPush 推烟用：r1 对时间求导，再乘上设置带来的快慢
-    const rate = (CONFIG.speed / 0.06) / CONFIG.rippleLife;
+    const rate = CONFIG.rippleSpeed;
     rp.v1 = 680 / 0.98 * Math.exp(-t / 0.98) * sizeK * rate;
     if (!rp.shape) {
       rp.shape = new Float32Array(ANG_BINS); rp.seg = new Float32Array(ANG_BINS); rp.tang = new Float32Array(ANG_BINS);

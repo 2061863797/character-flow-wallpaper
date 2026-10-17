@@ -123,36 +123,20 @@
         "order": 115,
         "text": "点击圆环 · 半径",
         "type": "slider",
-        "min": 40,
-        "max": 180,
+        "min": 30,
+        "max": 250,
         "value": 100
       },
-      "patternsize": {
+      "ripplespeed": {
         "order": 116,
-        "text": "点击圆环 · 扩散范围",
+        "text": "点击圆环 · 扩散速度（越快消失越早）",
         "type": "slider",
-        "min": 10,
-        "max": 150,
-        "value": 50
-      },
-      "speed": {
-        "order": 117,
-        "text": "点击圆环 · 扩散速度",
-        "type": "slider",
-        "min": 0,
-        "max": 200,
-        "value": 60
-      },
-      "ripplelife": {
-        "order": 118,
-        "text": "点击圆环 · 持续时间",
-        "type": "slider",
-        "min": 20,
-        "max": 100,
-        "value": 60
+        "min": 30,
+        "max": 300,
+        "value": 100
       },
       "bandwidth": {
-        "order": 119,
+        "order": 117,
         "text": "点击圆环 · 粗细",
         "type": "slider",
         "min": 10,
@@ -160,7 +144,7 @@
         "value": 40
       },
       "ripplestrength": {
-        "order": 120,
+        "order": 118,
         "text": "点击圆环 · 亮度",
         "type": "slider",
         "min": 0,
@@ -168,7 +152,7 @@
         "value": 100
       },
       "ripplescatter": {
-        "order": 121,
+        "order": 119,
         "text": "点击圆环 · 分散度",
         "type": "slider",
         "min": 0,
@@ -176,7 +160,7 @@
         "value": 100
       },
       "ripplewind": {
-        "order": 122,
+        "order": 120,
         "text": "点击圆环 · 带动烟雾",
         "type": "slider",
         "min": 0,
