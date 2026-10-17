@@ -205,10 +205,14 @@ function pushField(dst, src, dt) {
     const i = IX(x, y), a = src[i];
     if (a === 0) continue;
     if (!RU[i] && !RV[i]) { dst[i] += a; continue; }
+    // 只带走一部分，剩下的留在原地：圈一路走一路「漏」烟，经过的地方留下一道灰字，显出圈走过的路径
+    const stay = a * (1 - CONFIG.ripplePushShare);
+    dst[i] += stay;
+    const m = a - stay;
     const fx = Math.max(1, Math.min(NX - 2.001, x + RU[i] * dt)), fy = Math.max(1, Math.min(NY - 2.001, y + RV[i] * dt));
     const x0 = fx | 0, y0 = fy | 0, ax = fx - x0, ay = fy - y0, j = IX(x0, y0);
-    dst[j] += a * (1 - ax) * (1 - ay); dst[j + 1] += a * ax * (1 - ay);
-    dst[j + NX] += a * (1 - ax) * ay; dst[j + NX + 1] += a * ax * ay;
+    dst[j] += m * (1 - ax) * (1 - ay); dst[j + 1] += m * ax * (1 - ay);
+    dst[j + NX] += m * (1 - ax) * ay; dst[j + NX + 1] += m * ax * ay;
   }
   for (let i = 0; i < dst.length; i++) if (dst[i] > 1.2) dst[i] = 1.2;   // 浪头堆得再多也不会亮得刺眼
 }

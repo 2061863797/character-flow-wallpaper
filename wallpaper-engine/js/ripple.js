@@ -19,7 +19,8 @@ const RING_FILL = [[0, .04], [.4, .035], [.7, .02], [1, .008], [1.3, 0]];
 const RING_CONV = [[0, 1], [1, 1], [1.4, .6], [1.7, 0]];
 // 沿着圈一段亮一段暗的反差：越到后面越大，圈断成一段段（视频实测：0.8 秒约 9% 断开，1.2 秒 17%，1.6 秒 33%）
 const RING_SEG = [[0, 1], [.4, 1.3], [.8, 1.8], [1.2, 2.5], [1.6, 3.4], [2.6, 4.5]];
-let rippleGray = 0, rippleConv = 0;   // rippleAt 顺带算出的：变灰部分、灰烟染蓝
+// rippleAt 顺带算出的：变灰部分、灰烟染蓝、这里的圈有多「晚」（0 = 刚出来，1 = 已经扩散开，亮度改由背景灰字决定）
+let rippleGray = 0, rippleConv = 0, rippleLate = 0;
 // 爱心轮廓：每隔 15° 一个半径倍数（从正左方 -180° 开始，0° 是正右，90° 是正下），视频里三次爱心取平均
 const HEART = [0.97, 1.11, 1.26, 1.35, 1.35, 1.23, 1.07, 1.24, 1.33, 1.32, 1.24, 1.1, 0.95, 0.82, 0.76, 0.73, 0.73, 0.78, 0.86, 0.79, 0.73, 0.74, 0.76, 0.85];
 function table(tb, t) {
@@ -70,8 +71,9 @@ function rippleTables(now) {
     rp.gray = table(RING_GRAY, t); rp.warp = table(RING_WARP, t) * (rp.heart ? 0.6 : 1) * (1 + 2 * S);
     rp.late = Math.max(0, Math.min(1, (t - 0.35) / 0.8)) * Math.min(1.5, S);
     rp.bandK = bandK;
-    const lobe = rp.heart ? 0 : 0.04 + 0.1 * S;               // 圆形轮廓起伏的幅度
-    const maxK = rp.heart ? 1.4 : 1 + lobe, minK = rp.heart ? 0.68 : 1 - lobe;
+    // 轮廓起伏的幅度：视频里圈一出来就是歪的（一边扁一边鼓、边缘参差），不是标准的圆或心形，只是照着形状生成的大概
+    const lobe = rp.heart ? 0.05 + 0.06 * S : 0.08 + 0.12 * S;
+    const maxK = rp.heart ? 1.4 + lobe : 1 + lobe, minK = rp.heart ? 0.68 - lobe : 1 - lobe;
     const wp = rp.r1 * rp.warp * 0.6;                       // 被吹歪的最大距离（扭曲场实际很少超过 ±0.3）
     const hi = rp.r1 * maxK + 90 * bandK + wp, lo = Math.max(0, rp.r2 * minK - 90 * bandK - wp);
     rp.hi2 = hi * hi; rp.lo2 = lo * lo;                      // 离圈太远的字直接跳过
@@ -79,7 +81,7 @@ function rippleTables(now) {
     const rate = CONFIG.rippleSpeed;
     rp.v1 = 680 / 0.98 * Math.exp(-t / 0.98) * sizeK * rate;
     if (!rp.shape) {
-      rp.shape = new Float32Array(ANG_BINS); rp.seg = new Float32Array(ANG_BINS); rp.tang = new Float32Array(ANG_BINS);
+      rp.shape = new Float32Array(ANG_BINS); rp.seg = new Float32Array(ANG_BINS); rp.seg2 = new Float32Array(ANG_BINS); rp.tang = new Float32Array(ANG_BINS);
       // 推烟时顺着圈方向的分量：沿圈一段正一段反，推出去的烟会卷成小涡（每个圈固定一套，不随时间变）
       for (let k = 0; k < ANG_BINS; k++) {
         const ang = (k / ANG_BINS - 0.5) * 2 * Math.PI;
@@ -88,12 +90,16 @@ function rippleTables(now) {
     }
     for (let k = 0; k < ANG_BINS; k++) {
       const ang = (k / ANG_BINS - 0.5) * 2 * Math.PI, c = Math.cos(ang), s = Math.sin(ang);
-      // 形状：圆形带不规则的鼓包（视频里 0.5 秒后轮廓明显歪扭，有好几个鼓包）；爱心按轮廓表
-      rp.shape[k] = rp.heart ? heartShape(ang)
-        : 1 + ((noise(c * 1.5 + rp.seed, s * 1.5, t * 0.6) - 0.5) * 0.7 + (noise(c * 3.5 + rp.seed, s * 3.5 + 20, t * 0.9) - 0.5) * 0.3) * lobe * 2;
+      // 形状：照着圆或心形，再叠上不规则的鼓包和凹陷（大起伏 + 小毛刺），从一出来就是歪的
+      const wob = (noise(c * 1.5 + rp.seed, s * 1.5, t * 0.6) - 0.5) * 0.7 + (noise(c * 3.5 + rp.seed, s * 3.5 + 20, t * 0.9) - 0.5) * 0.3;
+      rp.shape[k] = (rp.heart ? heartShape(ang) : 1) + wob * lobe * 2;
       // 沿着圈一段亮一段暗（视频里圈不是均匀的）
       rp.seg[k] = noise(c * 1.3 + rp.seed * 1.7, s * 1.3 - rp.seed, t * 0.5) * 0.7 + noise(c * 3 + rp.seed, s * 3 + 40, t * 0.7) * 0.3;
+      // 内圈另用一套：视频里内圈从来不是完整的一圈，只有一两段弧和几块碎片
+      rp.seg2[k] = noise(c * 1.1 + rp.seed * 2.3 + 60, s * 1.1 + rp.seed, t * 0.4) * 0.75 + noise(c * 4 + rp.seed, s * 4 - 30, t * 0.8) * 0.25;
     }
+    // 内圈：门槛以下的部分直接没有，剩下的拉到正常亮度（大约只留下 40% 的圈）
+    for (let k = 0; k < ANG_BINS; k++) rp.seg2[k] = Math.max(0, Math.min(1.4, (rp.seg2[k] - 0.52) * (3 + 2 * S)));
     // 拉大反差：暗的段落直接断开；再整体归一，平均亮度不变
     const K = 1 + (table(RING_SEG, t) - 1) * (0.5 + 1.2 * S); let sum = 0;
     for (let k = 0; k < ANG_BINS; k++) { rp.seg[k] = Math.max(0, 0.5 + (rp.seg[k] - 0.5) * K); sum += rp.seg[k]; }
@@ -102,7 +108,7 @@ function rippleTables(now) {
   }
 }
 function rippleAt(x, y) {
-  let v = 0; rippleGray = 0; rippleConv = 0;
+  let v = 0, lateW = 0, gW = 0; rippleGray = 0; rippleConv = 0;
   let warpN = -1, rag = 0, thick = 0, streak = 0;
   for (const rp of ripples) {
     if (!rp.alive) continue;
@@ -119,6 +125,7 @@ function rippleAt(x, y) {
     const f = (Math.atan2(dy, dx) / (2 * Math.PI) + 0.5) * ANG_BINS, k = f | 0, u = f - k, k1 = k % ANG_BINS, k2 = (k + 1) % ANG_BINS;
     const shape = rp.shape[k1] + (rp.shape[k2] - rp.shape[k1]) * u;
     const seg = rp.seg[k1] + (rp.seg[k2] - rp.seg[k1]) * u;
+    const seg2 = rp.seg2[k1] + (rp.seg2[k2] - rp.seg2[k1]) * u;
     // 气流把圈推歪：按这个位置的扭曲场往里或往外挪（越到后面挪得越多）
     if (warpN < 0) { const gx = x / SIM + 0.5, gy = y / SIM + 0.5; warpN = sample(RW, gx, gy) - 0.5; rag = sample(RG, gx, gy); thick = sample(RT, gx, gy); streak = sample(RS, gx, gy); }
     // 毛边：按细碎噪声把圈边一格格往里往外推，边缘参差不齐
@@ -130,13 +137,15 @@ function rippleAt(x, y) {
     const w1 = (d1 > 0 ? 6 + 0.01 * R1 : 16 + 0.045 * R1) * bandK * tk;
     const d2 = dist - R2, w2 = (8 + 0.025 * R2) * bandK * tk;
     const q1 = d1 / w1, q2 = d2 / w2;
-    let g = (q1 * q1 < 9 ? Math.exp(-q1 * q1) * rp.a1 : 0) + (q2 * q2 < 9 ? Math.exp(-q2 * q2) * rp.a2 : 0);
+    // 外圈按 seg 一段亮一段暗；内圈按自己的 seg2，大半直接没有
+    let g = (q1 * q1 < 9 ? Math.exp(-q1 * q1) * rp.a1 * seg : 0)
+          + (q2 * q2 < 9 ? Math.exp(-q2 * q2) * rp.a2 * seg2 : 0);
     // 两圈之间铺一层极淡的蓝（视频里两道圈中间也几乎每格都有暗蓝的字）
-    if (dist > R2 * 0.85 && dist < R1) g = Math.max(g, 0.03 * rp.a1);
+    if (dist > R2 * 0.85 && dist < R1) g = Math.max(g, 0.03 * rp.a1 * seg);
     // 圈扫过的整片区域：泛一层很暗的蓝，原来的灰烟被染成蓝
     const inside = Math.max(0, Math.min(1, (R1 + 20 - dist) / 60));
     if (inside > 0) {
-      g = Math.max(g, rp.fill * inside);
+      g = Math.max(g, rp.fill * inside * seg);
       if (rp.conv * inside > rippleConv) rippleConv = rp.conv * inside;
     }
     // 越到后面越碎：按细碎噪声把圈打出缺口，一段段散开
@@ -144,9 +153,10 @@ function rippleAt(x, y) {
     // 分散度越大，缺口越彻底（视频里 1 秒后圈断成互不相连的一段段弧）；×1.6：碎开后整体亮度不变，只是集中到一缕缕上
     const lk = Math.min(1, rp.late);
     g *= 1 - lk * 0.85 + lk * 0.85 * brk * 1.6;
-    g *= seg;
     v += g * (1 - rp.gray);
     rippleGray += g * rp.gray;
+    lateW += g * lk; gW += g;
   }
+  rippleLate = gW > 0 ? lateW / gW : 0;
   return Math.min(1, v * 0.68 * CONFIG.rippleStrength);   // 0.68：对照视频校准的整体亮度
 }
