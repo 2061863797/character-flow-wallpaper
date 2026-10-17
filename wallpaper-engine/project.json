@@ -83,12 +83,6 @@
         "max": 100,
         "value": 60
       },
-      "ambient": {
-        "order": 110,
-        "text": "自动漂移光带",
-        "type": "bool",
-        "value": false
-      },
       "charsize": {
         "order": 111,
         "text": "字符大小",
@@ -118,44 +112,6 @@
         "text": "鼠标卷入模式",
         "type": "bool",
         "value": false
-      },
-      "trailenabled": {
-        "order": 115,
-        "text": "鼠标悬停光环",
-        "type": "bool",
-        "value": false
-      },
-      "trailradius": {
-        "order": 116,
-        "text": "光环半径",
-        "type": "slider",
-        "min": 20,
-        "max": 220,
-        "value": 82
-      },
-      "trailstrength": {
-        "order": 117,
-        "text": "光环亮度",
-        "type": "slider",
-        "min": 0,
-        "max": 100,
-        "value": 82
-      },
-      "traillife": {
-        "order": 118,
-        "text": "光环动画速度",
-        "type": "slider",
-        "min": 10,
-        "max": 100,
-        "value": 58
-      },
-      "trailsoftness": {
-        "order": 119,
-        "text": "光环柔化",
-        "type": "slider",
-        "min": 0,
-        "max": 100,
-        "value": 62
       },
       "clickripples": {
         "order": 120,

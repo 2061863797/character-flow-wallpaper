@@ -133,31 +133,3 @@ function rippleAt(x, y) {
   }
   return Math.min(1, v * 0.68 * CONFIG.rippleStrength);   // 0.68：对照视频校准的整体亮度
 }
-
-function cursorGlowAt(x, y, now) {
-  if (!CONFIG.cursorEnabled || !mouse.inside) return 0;
-  const dx = x - mouse.x, dy = y - mouse.y;
-  const dist = Math.hypot(dx, dy);
-  // 光环最外圈也不会超过约 2.1 倍半径，离得更远的字直接跳过，省掉大量计算
-  if (dist > CONFIG.cursorRadius * 2.5 + 20) return 0;
-  const ang = Math.atan2(dy, dx);
-  const phase = now / 1000 * (0.25 + CONFIG.cursorPulse * 2.2);
-  const wobbleNoise = noise(Math.cos(ang * 2.1) * 1.7 + 9, Math.sin(ang * 2.1) * 1.7 - 4, phase * 0.32);
-  const wobble = (wobbleNoise - 0.5) * CONFIG.cursorRadius * (0.22 + CONFIG.cursorSoftness * 0.3)
-    + Math.sin(ang * 2.0 + phase * 0.8) * CONFIG.cursorRadius * 0.06;
-  const radius = CONFIG.cursorRadius * (0.92 + 0.08 * Math.sin(phase * 0.7));
-  const width = Math.max(3, CONFIG.cursorRadius * (0.045 + CONFIG.cursorSoftness * 0.08));
-  const band = (r, w, gain) => Math.exp(-Math.pow((dist - r - wobble) / w, 2)) * gain;
-  const rings = band(radius, width, 1) + band(radius * 0.72, width * 1.15, 0.42) + band(radius * 1.28, width * 1.35, 0.28);
-  const flicker = 0.78 + 0.22 * noise(Math.cos(ang) * 2 + 40, Math.sin(ang) * 2 - 20, phase * 0.8);
-  return Math.min(1, rings * flicker * CONFIG.cursorStrength);
-}
-
-function ambientAt(x, y, t) {
-  const s = CONFIG.scale;
-  const ridge = 1 - Math.abs(noise(x * s, y * s, t) - 0.5) * 2;
-  const bw = Math.max(0.05, CONFIG.bandWidth);
-  const band = Math.max(0, (ridge - (1 - bw)) / bw);
-  const m = Math.min(1, Math.max(0, (noise(x * s * 0.35 + 100, y * s * 0.35, t * 0.6) - 0.45) / 0.15));
-  return Math.sqrt(band) * m;
-}

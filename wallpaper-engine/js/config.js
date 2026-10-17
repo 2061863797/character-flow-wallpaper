@@ -1,10 +1,5 @@
 // ===== 默认参数（在 Wallpaper Engine 里可被用户设置覆盖）=====
 const CONFIG = {
-  cursorEnabled: false,
-  cursorRadius: 82,
-  cursorStrength: 0.82,
-  cursorPulse: 0.58,
-  cursorSoftness: 0.62,
   bgContrast: 1,
   rippleEnabled: true,
   rippleRadius: 1,
@@ -40,14 +35,13 @@ const CONFIG = {
   smokeAmount: 0.4,      // 背景烟量：烟源占画面的比例（自动保持稳定）
   airSpeed: 58,          // 风速：烟整体往右下飘的速度（屏幕像素/秒，视频实测约 58）
   glow: [40, 116, 164],  // 点击扩散的光带颜色（蓝，视频实测最亮处）
-  speed: 0.06,           // 速度：扩散快慢 + 自动光带漂移
-  scale: 0.0035,         // 图案大小：扩散范围 + 自动光带尺度
+  speed: 0.06,           // 点击扩散的快慢
+  scale: 0.0035,         // 点击扩散的范围（越小圈越大）
   bandWidth: 0.4,        // 光带粗细（0~1）
   flicker: 0.02,         // 每帧字符随机变化比例
   baseDensity: 1,        // 字符密度
   hoverRadius: 90,       // 鼠标影响半径（像素）
   hoverStrength: 0.6,    // 鼠标滑过加深程度（0~1）
-  ambient: false,        // 是否开启自动漂移的光带
   // 鼠标雾的亮度与斑块（对照视频测量调出来的）
   fogBase: 0.8, fogGain: 2.0, fogCap: 0.53, fogDepthLo: 0.4, fogDepthHi: 0.6, fogDepthScale: 0.6,
   fogFill: 24,           // 雾里出字的多少（越大越满）

@@ -6,7 +6,6 @@ function frame(now) {
   if (CONFIG.fps > 0 && now - last < 1000 / CONFIG.fps - 2) return;
   const dt = Math.min(0.1, (now - last) / 1000);
   last = now;
-  const t = now / 1000 * CONFIG.speed;
   const sec = now / 1000;
   const { cellW: W, cellH: H } = CONFIG;
   while (ripples.length && rippleAge(ripples[0], now) > RIPPLE_END) ripples.shift();
@@ -32,8 +31,6 @@ function frame(now) {
         const jj = 0.8 + 0.4 * jitter2[i];
         glow = ripG * jj; ripGray = Math.min(0.3, ripGr * 0.85 * CONFIG.rippleStrength * 3.5 * jj);
       }
-      if (CONFIG.cursorEnabled) glow = Math.max(glow, cursorGlowAt(x, y, now));
-      if (CONFIG.ambient) glow = Math.min(1, glow + ambientAt(x, y, t));
       // 这个字所在位置的烟雾浓度 → 字的亮度（烟越浓越亮，最亮就是平时的灰）
       const gx = (x + W / 2) / SIM + 0.5, gy = (y + H / 2) / SIM + 0.5;
       const ms = sample(M, gx, gy) * CONFIG.mouseFill;
