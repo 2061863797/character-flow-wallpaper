@@ -37,7 +37,9 @@ function frame(now) {
       // 默认模式下鼠标搅起的雾（对照视频）：雾里几乎每格都出字，亮度由流动纹理决定，是满满一片带斜纹的淡字；
       // 亮度范围拉开（暗处几乎贴着背景，亮处到平时的灰），薄的地方字也更稀
       let fogVis = 0;
-      if (ms > CONFIG.fogMin && !CONFIG.swirlMode) {
+      // 门槛不是一刀切：浓度从门槛的 0.3 倍到 2 倍之间，字的亮度从 0 平滑升到正常；雾散的时候字是慢慢暗下去的
+      const fogRamp = CONFIG.fogMin > 0 ? Math.max(0, Math.min(1, (ms - CONFIG.fogMin * 0.3) / (CONFIG.fogMin * 1.7))) : 1;
+      if (fogRamp > 0 && ms > 0.02 && !CONFIG.swirlMode) {
         const ft = sample(FT, gx, gy);
         // 填充比例超过 100% 的部分（0～1）：越往上，最暗的字越亮、薄雾也填满，拉满时雾里是一片均匀的字
         const over = Math.max(0, Math.min(1, (CONFIG.mouseFill - 1) / 0.5));
@@ -46,6 +48,7 @@ function frame(now) {
           const strength = Math.min(1, Math.pow(ms * (2.2 + 6 * over), CONFIG.fogCurve));
           fogVis = Math.min(CONFIG.fogCap, Math.max(lerp(CONFIG.fogMinVis, 0.32, over) * strength,
             0.5 * strength * (CONFIG.fogBase + CONFIG.fogGain * ft) * jitter[i]));
+          fogVis *= fogRamp * fogRamp * (3 - 2 * fogRamp);
         }
       }
       const gxs = gx + rowOff[r] / SIM;

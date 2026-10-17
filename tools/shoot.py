@@ -47,6 +47,12 @@ SCENES = {
         shots=[180],
         video=[],
         crop=(980, 460, 600, 480), scale=1.0),
+    # 来回划 1.5 秒后停住，看雾散掉的过程是不是平滑（每 0.25 秒一张）
+    'fade': dict(
+        actions={i: ('move', 900 + 760 * (0.5 + 0.5 * np.sin(i / 3.1)), 400 + 600 * (0.5 + 0.5 * np.sin(i / 17.3))) for i in range(0, 90)},
+        shots=list(range(90, 90 + 15 * 16, 15)),
+        video=[],
+        crop=(800, 300, 960, 800), scale=0.4),
     # 视频 0.75～2.2 秒的一次滑动和之后的消散
     'stroke': dict(
         actions='stroke',
