@@ -166,6 +166,22 @@
         "min": 0,
         "max": 100,
         "value": 33
+      },
+      "ripplescatter": {
+        "order": 125,
+        "text": "圆环分散度",
+        "type": "slider",
+        "min": 0,
+        "max": 200,
+        "value": 100
+      },
+      "fogfade": {
+        "order": 126,
+        "text": "鼠标雾消散时间（0.1 秒）",
+        "type": "slider",
+        "min": 2,
+        "max": 50,
+        "value": 10
       }
     }
   }

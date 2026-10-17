@@ -56,6 +56,7 @@ function rippleTables(now) {
   else if (simFrame !== rwFrame) { rippleWarpField(now / 1000, simFrame % 3); rwFrame = simFrame; }
   const sizeK = 0.0035 / CONFIG.scale * CONFIG.rippleRadius;  // 扩散范围
   const bandK = CONFIG.bandWidth / 0.4;                      // 光带粗细
+  const S = CONFIG.rippleScatter;                            // 分散度：圈变形、断开、碎散的程度（0 = 规整的圆）
   for (const rp of ripples) {
     const t = rippleAge(rp, now);
     rp.alive = t < RIPPLE_END;
@@ -65,22 +66,26 @@ function rippleTables(now) {
     rp.r2 = 990 * (1 - Math.exp(-t / 3.2)) * sizeK;         // 内圈：慢，速度几乎不变
     rp.a1 = table(RING_OUT_AMP, t); rp.a2 = table(RING_IN_AMP, t);
     rp.fill = table(RING_FILL, t); rp.conv = table(RING_CONV, t); rp.rough = table(RING_ROUGH, t);
-    rp.gray = table(RING_GRAY, t); rp.warp = table(RING_WARP, t) * (rp.heart ? 0.6 : 1); rp.late = Math.max(0, Math.min(1, (t - 0.4) / 1.1));   // 爱心少歪一点：视频里 1.2 秒时还认得出是心形
+    // 爱心少歪一点：视频里 1.2 秒时还认得出是心形
+    rp.gray = table(RING_GRAY, t); rp.warp = table(RING_WARP, t) * (rp.heart ? 0.6 : 1) * (1 + 2 * S);
+    rp.late = Math.max(0, Math.min(1, (t - 0.35) / 0.8)) * Math.min(1.5, S);
     rp.bandK = bandK;
-    const maxK = rp.heart ? 1.4 : 1.06, minK = rp.heart ? 0.68 : 0.94;
+    const lobe = rp.heart ? 0 : 0.04 + 0.1 * S;               // 圆形轮廓起伏的幅度
+    const maxK = rp.heart ? 1.4 : 1 + lobe, minK = rp.heart ? 0.68 : 1 - lobe;
     const wp = rp.r1 * rp.warp * 0.6;                       // 被吹歪的最大距离（扭曲场实际很少超过 ±0.3）
     const hi = rp.r1 * maxK + 90 * bandK + wp, lo = Math.max(0, rp.r2 * minK - 90 * bandK - wp);
     rp.hi2 = hi * hi; rp.lo2 = lo * lo;                      // 离圈太远的字直接跳过
     if (!rp.shape) { rp.shape = new Float32Array(ANG_BINS); rp.seg = new Float32Array(ANG_BINS); }
     for (let k = 0; k < ANG_BINS; k++) {
       const ang = (k / ANG_BINS - 0.5) * 2 * Math.PI, c = Math.cos(ang), s = Math.sin(ang);
-      // 形状：圆形带一点点不规则；爱心按轮廓表
-      rp.shape[k] = rp.heart ? heartShape(ang) : 1 + (noise(c * 1.5 + rp.seed, s * 1.5, t * 0.6) - 0.5) * 0.08;
+      // 形状：圆形带不规则的鼓包（视频里 0.5 秒后轮廓明显歪扭，有好几个鼓包）；爱心按轮廓表
+      rp.shape[k] = rp.heart ? heartShape(ang)
+        : 1 + ((noise(c * 1.5 + rp.seed, s * 1.5, t * 0.6) - 0.5) * 0.7 + (noise(c * 3.5 + rp.seed, s * 3.5 + 20, t * 0.9) - 0.5) * 0.3) * lobe * 2;
       // 沿着圈一段亮一段暗（视频里圈不是均匀的）
       rp.seg[k] = noise(c * 1.3 + rp.seed * 1.7, s * 1.3 - rp.seed, t * 0.5) * 0.7 + noise(c * 3 + rp.seed, s * 3 + 40, t * 0.7) * 0.3;
     }
     // 拉大反差：暗的段落直接断开；再整体归一，平均亮度不变
-    const K = table(RING_SEG, t); let sum = 0;
+    const K = 1 + (table(RING_SEG, t) - 1) * (0.5 + 1.2 * S); let sum = 0;
     for (let k = 0; k < ANG_BINS; k++) { rp.seg[k] = Math.max(0, 0.5 + (rp.seg[k] - 0.5) * K); sum += rp.seg[k]; }
     const nrm = ANG_BINS / Math.max(1e-3, sum);
     for (let k = 0; k < ANG_BINS; k++) rp.seg[k] *= nrm;
@@ -126,7 +131,9 @@ function rippleAt(x, y) {
     }
     // 越到后面越碎：按细碎噪声把圈打出缺口，一段段散开
     const brk = Math.max(0, Math.min(1.6, streak * 3 - 0.9)) * 0.7 + Math.max(0, Math.min(1.5, rag * 2.4 - 0.55)) * 0.3;
-    g *= 1 - rp.late * 0.5 + rp.late * 0.5 * brk * 1.6;   // ×1.6：碎开后整体亮度不变，只是集中到一缕缕上
+    // 分散度越大，缺口越彻底（视频里 1 秒后圈断成互不相连的一段段弧）；×1.6：碎开后整体亮度不变，只是集中到一缕缕上
+    const lk = Math.min(1, rp.late);
+    g *= 1 - lk * 0.85 + lk * 0.85 * brk * 1.6;
     g *= seg;
     v += g * (1 - rp.gray);
     rippleGray += g * rp.gray;

@@ -78,18 +78,19 @@ function frame(now) {
       const sparse = thr < sk * CONFIG.bgFill;           // 浓度低的边缘只有一部分格子出字，烟团里面几乎满格
       const bgVis = sparse ? Math.max(CONFIG.bgMin * CONFIG.bgContrast * Math.min(1, sk * 4), 0.5 * CONFIG.bgBright * CONFIG.bgContrast * Math.pow(sk, CONFIG.bgPow) * jitter[i]) : 0;
       // 薄雾：烟带外围很淡、很稀的点和短横
-      let hazeVis = 0;
+      let hazeVis = 0, hz = 0;
       if (CONFIG.hazeAmount > 0) {
-        const hz = sample(HZ, gxs, gy);
+        hz = sample(HZ, gxs, gy);
         if (hz > 0.01 && 0.8 * (1 - coh) + 0.2 * ((dither[i] * 3.17) % 1) < hz * CONFIG.hazeFill) hazeVis = CONFIG.hazeLevel * (0.5 + 0.5 * hz) * jitter[i];
       }
       // 蓝圈处不额外加灰：颜色从「原来这格的灰」往蓝色过渡，空白处就是从背景色变蓝（越弱越暗）
       // 圈褪色后留下的灰字（视频里蓝圈最后变成一圈淡灰的字再消失）
       let smokeVis = Math.max(bgVis, hazeVis, fogVis);
-      if (hasRipple && ripCv > 0 && sk > 0) {
-        // 圈里的灰烟整片染成蓝（视频里烟所在的地方变成一大块均匀的蓝），之后慢慢变回灰；字一直都在
-        // 按平滑的烟浓度来染，不按每个字自己的亮度——否则原本稀疏、忽明忽暗的字会被一个个点亮，显得突兀
-        glow = Math.min(1, glow + sk * 0.4 * ripCv * CONFIG.rippleStrength);
+      // 圈里所有的灰字（背景烟、鼠标雾、外围薄雾）整片染成蓝（视频里烟和雾所在的地方都变成一大块均匀的蓝），之后慢慢变回灰；字一直都在。
+      // 按平滑的浓度来染，不按每个字自己的亮度——否则原本稀疏、忽明忽暗的字会被一个个点亮，显得突兀
+      const dens = Math.max(sk, CONFIG.swirlMode ? 0 : Math.min(1, ms * 2.2), hz * 0.4);
+      if (hasRipple && ripCv > 0 && dens > 0) {
+        glow = Math.min(1, glow + dens * 0.4 * ripCv * CONFIG.rippleStrength);
         smokeVis *= 1 - ripCv;
       }
       const vis = Math.max(smokeVis, ripGray);

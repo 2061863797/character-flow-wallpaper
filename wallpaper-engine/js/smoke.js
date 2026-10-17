@@ -244,7 +244,8 @@ function stepSmoke(dt, sec) {
   }
   // 鼠标的烟：同样被风带走、化开，但约 2 秒才淡掉，整条路径都看得到
   advect(D2, M, dt);
-  const keepM = Math.exp(-dt / (CONFIG.swirlMode ? 2.8 : 3.6));   // 默认模式的雾停留更久（视频里约 3～4 秒）
+  // 鼠标雾大约 fogFade 秒散完（衰减到约 8%，看不见了）；卷入模式要留着让旋涡卷，固定 2.8 秒的时间常数
+  const keepM = Math.exp(-dt / (CONFIG.swirlMode ? 2.8 : Math.max(0.05, CONFIG.fogFade / 2.5)));
   for (let y = 1; y < NY - 1; y++) for (let x = 1; x < NX - 1; x++) {
     const i = IX(x, y);
     const nb = (D2[i - 1] + D2[i + 1] + D2[i - NX] + D2[i + NX]) * 0.25;

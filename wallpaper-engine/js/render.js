@@ -40,13 +40,17 @@ function buildAtlas() {
   glyphA = Uint8Array.from(al);      // 对应的墨量
   // 2) 颜色表：每种「灰度级 × 蓝色级 × 墨量」直接查出最终像素颜色（字和背景按墨量混合）
   colorLUT = new Uint32Array(GRAY_LEVELS * GLOW_LEVELS * 256);
-  const bg = CONFIG.bg;
+  const bg = CONFIG.bg, glow = CONFIG.glow;
+  const glowSpan = Math.max(1, ...glow.map((v, i) => v - bg[i]));
   for (let g = 0; g < GRAY_LEVELS; g++) {
     const gray = grayAt(g / (GRAY_LEVELS - 1));
+    const gr = Math.max(0, ...gray.map((v, i) => v - bg[i])) / glowSpan;   // 这一级灰有多亮（换算成蓝光强度）
     for (let b = 0; b < GLOW_LEVELS; b++) {
       const t = b / (GLOW_LEVELS - 1);
-      // 蓝光叠加在原来的灰上（对照视频：烟里的蓝字更亮，空白处的蓝字只是暗蓝）
-      const c = gray.map((v, i) => Math.min(255, v + (CONFIG.glow[i] - CONFIG.bg[i]) * t));
+      // 被蓝圈照到的字整个变成蓝色调，不是在灰上叠一层蓝（否则烟里的字还是灰的，对照视频：圈上的字都是蓝的）。
+      // m = 换色程度：蓝光一弱就开始换，稍强一点就完全换成蓝；原来的灰亮度折算成蓝光保留下来，烟里的蓝字更亮
+      const m = Math.min(1, t * 6);
+      const c = gray.map((v, i) => Math.min(255, bg[i] + (glow[i] - bg[i]) * (t + gr * 0.85 * m) + (v - bg[i]) * (1 - m)));
       const base = (g * GLOW_LEVELS + b) * 256;
       for (let k = 0; k < 256; k++) {
         const f = k / 255;
@@ -82,14 +86,12 @@ function resetChars() {
     Math.random() < CONFIG.baseDensity ? Math.random() * NL | 0 : -1);
 }
 
-function resize() {
-  dpr = window.devicePixelRatio || 1;
-  // 格子取整数个屏幕像素，字才清晰；再换算回页面像素给其他计算用
+// 按「字符大小」重新排字：只重建字符网格和字形，不动烟雾模拟（改字号时烟不会重置、画面不会卡一下）
+function layoutChars() {
+  // 格子和字号都取整数个屏幕像素，字才清晰；再换算回页面像素给其他计算用
   CONFIG.cellW = Math.max(4, Math.round(CONFIG.devCellW * CONFIG.charScale)) / dpr;
   CONFIG.cellH = Math.max(6, Math.round(CONFIG.devCellH * CONFIG.charScale)) / dpr;
-  CONFIG.fontSize = CONFIG.devFont * CONFIG.charScale / dpr;
-  canvas.width = innerWidth * dpr;
-  canvas.height = innerHeight * dpr;
+  CONFIG.fontSize = Math.max(4, Math.round(CONFIG.devFont * CONFIG.charScale)) / dpr;
   cols = Math.ceil(innerWidth / CONFIG.cellW);
   rows = Math.ceil(innerHeight / CONFIG.cellH);
   jitter = new Float32Array(cols * rows).map(() => 1 - CONFIG.charJitter * Math.random());
@@ -97,5 +99,12 @@ function resize() {
   dither = new Float32Array(cols * rows).map(() => Math.random());
   resetChars();
   buildAtlas();
+}
+
+function resize() {
+  dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(innerWidth * dpr);
+  canvas.height = Math.round(innerHeight * dpr);
+  layoutChars();
   initSmoke();
 }
