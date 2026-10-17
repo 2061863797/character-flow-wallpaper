@@ -54,8 +54,8 @@ const CONFIG = {
   swirlMode: false,      // 鼠标卷入模式：开启后鼠标划过会留下左右交替的旋涡，把烟卷进来
   fps: 30,               // 0 表示不限帧
 };
-// 画面里用到的全部字符
-const LETTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+// 画面里用到的全部字符（对照视频里看得清的亮字统计：约八成是小写，大写只出现过 A E K R S，数字只出现过 0 2 3 5 7 9）
+const LETTERS = 'abcdefghijklmnopqrstuvwxyzAEKRS023579';
 const NL = LETTERS.length;
 const GRAY_LEVELS = 25;  // 灰色深浅分级：0 接近背景，中间是平时最亮，顶端是鼠标加深
 const GLOW_LEVELS = 32;  // 蓝色分级（扩散用）：分得细，蓝色淡出时不会一档档跳、整片字一起消失
