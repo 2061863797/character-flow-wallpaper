@@ -3,7 +3,8 @@ const CONFIG = {
   bgContrast: 1,
   rippleEnabled: true,
   rippleRadius: 1,      // 点击圆环的大小倍数（设置里的「半径」）
-  rippleSpeed: 1,       // 点击圆环的快慢倍数：越大扩得越快、消失得越早（设置里的「扩散速度」）
+  rippleLinger: 1.6,    // 点击圆环褪色阶段放慢几倍（1 = 和视频一样约 2.6 秒消失；1.6 ≈ 3.7 秒）
+  rippleSpeed: 1,      // 点击圆环的快慢倍数：越大扩得越快、消失得越早（设置里的「扩散速度」）
   rippleStrength: 1.4,  // 点击圆环亮度（对照视频：圈上蓝字的中间亮度）
   mouseFill: 1.2,      // 鼠标雾显示的满度（同一处来回划 4 趟以上时的亮度）
   rippleWind: 0,        // 点击圆环推动烟雾的强度（0 = 不推：圈是通过灰字传递的，灰字本身不动）

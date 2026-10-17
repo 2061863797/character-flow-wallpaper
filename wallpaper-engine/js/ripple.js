@@ -36,6 +36,8 @@ function heartShape(ang) {
 }
 // 点击后经过的「视频秒数」：「扩散速度」设置让它整体变快变慢（圈扩得快，也消失得早）
 const rippleAge = (rp, now) => (now - rp.born) / 1000 * CONFIG.rippleSpeed;
+// 褪色用的时间：0.8 秒以前和视频一样；之后放慢 rippleLinger 倍，圈停留得更久才消失（扩散的快慢和大小不受影响）
+const fadeAge = t => t < 0.8 ? t : 0.8 + (t - 0.8) / CONFIG.rippleLinger;
 const ANG_BINS = 180;
 // 每帧给每个圈算一次：各个方向上的半径倍数（形状）和亮度（一段亮一段暗）
 // 扭曲场：顺着风向拉长、跟着风飘的噪声（和背景烟同一个方向），让圈像被气流吹散的烟
@@ -60,17 +62,17 @@ function rippleTables(now) {
   const bandK = CONFIG.bandWidth / 0.4;                      // 光带粗细
   const S = CONFIG.rippleScatter;                            // 分散度：圈变形、断开、碎散的程度（0 = 规整的圆）
   for (const rp of ripples) {
-    const t = rippleAge(rp, now);
-    rp.alive = t < RIPPLE_END;
+    const t = rippleAge(rp, now), tf = fadeAge(t);   // t 管扩散（半径、形状），tf 管亮度和褪色
+    rp.alive = tf < RIPPLE_END;
     if (!rp.alive) continue;
     // 这些每帧只算一次，不用每个字都算一遍
     rp.r1 = 680 * (1 - Math.exp(-t / 0.98)) * sizeK;        // 外圈：一开始约 600 像素/秒，越来越慢
     // 内圈：约 0.29 秒才从中心长出来，之后约 450 像素/秒、慢慢减速（视频实测 0.53 秒约 105 像素，0.7 秒约 180 像素）
     rp.r2 = 620 * (1 - Math.exp(-Math.max(0, t - 0.29) / 1.1)) * sizeK;
-    rp.a1 = table(RING_OUT_AMP, t); rp.a2 = table(RING_IN_AMP, t);
-    rp.fill = table(RING_FILL, t); rp.conv = table(RING_CONV, t); rp.rough = table(RING_ROUGH, t);
+    rp.a1 = table(RING_OUT_AMP, tf); rp.a2 = table(RING_IN_AMP, tf);
+    rp.fill = table(RING_FILL, tf); rp.conv = table(RING_CONV, tf); rp.rough = table(RING_ROUGH, t);
     // 爱心少歪一点：视频里 1.2 秒时还认得出是心形
-    rp.gray = table(RING_GRAY, t); rp.warp = table(RING_WARP, t) * (rp.heart ? 0.6 : 1) * (1 + 2 * S);
+    rp.gray = table(RING_GRAY, tf);rp.warp = table(RING_WARP, t) * (rp.heart ? 0.6 : 1) * (1 + 2 * S);
     rp.late = Math.max(0, Math.min(1, (t - 0.35) / 0.8)) * Math.min(1.5, S);
     rp.bandK = bandK;
     // 轮廓起伏的幅度：视频里圈一出来就是歪的（一边扁一边鼓、边缘参差），不是标准的圆或心形，只是照着形状生成的大概

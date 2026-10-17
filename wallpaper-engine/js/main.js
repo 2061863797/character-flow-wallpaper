@@ -8,7 +8,7 @@ function frame(now) {
   last = now;
   const sec = now / 1000;
   const { cellW: W, cellH: H } = CONFIG;
-  while (ripples.length && rippleAge(ripples[0], now) > RIPPLE_END) ripples.shift();
+  while (ripples.length && fadeAge(rippleAge(ripples[0], now)) > RIPPLE_END) ripples.shift();
   const hasRipple = CONFIG.rippleEnabled && ripples.length > 0;
   if (hasRipple) rippleTables(now);
 
