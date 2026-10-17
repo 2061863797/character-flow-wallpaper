@@ -14,7 +14,8 @@ const RING_WARP = [[0, .02], [.3, .035], [.6, .05], [1, .07], [1.4, .1], [1.8, .
 const RING_ROUGH = [[0, 0], [2, 0]];   // 视频实测圈的外沿是干净的台阶状，不加毛边
 // 圈扫过的整片区域（视频实测）：0.1~0.6 秒整个圆盘泛一层很暗的蓝，之后整片慢慢变暗，约 1 秒褪完
 // 字一直都在，只是颜色和亮度慢慢变，不会有字突然消失
-const RING_FILL = [[0, .04], [.4, .035], [.7, .02], [1, .008], [1.3, 0]];
+// 视频里圈的中心几乎是黑的（蓝色强度只有圈上的 1/10），所以这层蓝很淡，否则会把内圈淹没
+const RING_FILL = [[0, .012], [.4, .01], [.7, .006], [1, .002], [1.3, 0]];
 // 圈里原来的灰烟被染成蓝的程度，之后慢慢变回灰
 const RING_CONV = [[0, 1], [1, 1], [1.4, .6], [1.7, 0]];
 // 沿着圈一段亮一段暗的反差：越到后面越大，圈断成一段段（视频实测：0.8 秒约 9% 断开，1.2 秒 17%，1.6 秒 33%）
@@ -64,7 +65,8 @@ function rippleTables(now) {
     if (!rp.alive) continue;
     // 这些每帧只算一次，不用每个字都算一遍
     rp.r1 = 680 * (1 - Math.exp(-t / 0.98)) * sizeK;        // 外圈：一开始约 600 像素/秒，越来越慢
-    rp.r2 = 990 * (1 - Math.exp(-t / 3.2)) * sizeK;         // 内圈：慢，速度几乎不变
+    // 内圈：约 0.29 秒才从中心长出来，之后约 450 像素/秒、慢慢减速（视频实测 0.53 秒约 105 像素，0.7 秒约 180 像素）
+    rp.r2 = 620 * (1 - Math.exp(-Math.max(0, t - 0.29) / 1.1)) * sizeK;
     rp.a1 = table(RING_OUT_AMP, t); rp.a2 = table(RING_IN_AMP, t);
     rp.fill = table(RING_FILL, t); rp.conv = table(RING_CONV, t); rp.rough = table(RING_ROUGH, t);
     // 爱心少歪一点：视频里 1.2 秒时还认得出是心形
@@ -98,8 +100,8 @@ function rippleTables(now) {
       // 内圈另用一套：视频里内圈从来不是完整的一圈，只有一两段弧和几块碎片
       rp.seg2[k] = noise(c * 1.1 + rp.seed * 2.3 + 60, s * 1.1 + rp.seed, t * 0.4) * 0.75 + noise(c * 4 + rp.seed, s * 4 - 30, t * 0.8) * 0.25;
     }
-    // 内圈：门槛以下的部分直接没有，剩下的拉到正常亮度（大约只留下 40% 的圈）
-    for (let k = 0; k < ANG_BINS; k++) rp.seg2[k] = Math.max(0, Math.min(1.4, (rp.seg2[k] - 0.52) * (3 + 2 * S)));
+    // 内圈：门槛以下的部分直接没有（大约留下 4/5 圈），留下的弧段和外圈一样亮（视频 0.4 秒时内圈已经很清楚）
+    for (let k = 0; k < ANG_BINS; k++) rp.seg2[k] = Math.max(0, Math.min(1, (rp.seg2[k] - 0.38) * (3 + 2 * S))) * 4;
     // 拉大反差：暗的段落直接断开；再整体归一，平均亮度不变
     const K = 1 + (table(RING_SEG, t) - 1) * (0.5 + 1.2 * S); let sum = 0;
     for (let k = 0; k < ANG_BINS; k++) { rp.seg[k] = Math.max(0, 0.5 + (rp.seg[k] - 0.5) * K); sum += rp.seg[k]; }
@@ -115,9 +117,8 @@ function rippleAt(x, y) {
     const dx = (x - rp.x) * dpr, dy = (y - rp.y) * dpr;     // 换算成屏幕像素
     const dd = dx * dx + dy * dy;
     if (dd > rp.hi2) continue;
-    if (dd < rp.lo2) {                                       // 圈里面很深的地方：只有整片的效果
+    if (dd < rp.lo2) {                                       // 圈里面很深的地方：只有很淡的一层蓝；留下的灰字路径保持灰色
       v += rp.fill * (1 - rp.gray);
-      if (rp.conv > rippleConv) rippleConv = rp.conv;
       continue;
     }
     const dist = Math.sqrt(dd), bandK = rp.bandK;
@@ -135,7 +136,7 @@ function rippleAt(x, y) {
     const d1 = dist - R1;
     const tk = 0.75 + 0.5 * thick;                          // 圈的粗细略有起伏（视频里光带厚度比较均匀）
     const w1 = (d1 > 0 ? 6 + 0.01 * R1 : 16 + 0.045 * R1) * bandK * tk;
-    const d2 = dist - R2, w2 = (8 + 0.025 * R2) * bandK * tk;
+    const d2 = dist - R2, w2 = (14 + 0.05 * R2) * bandK * tk;   // 内圈 2～3 个字宽（视频实测）
     const q1 = d1 / w1, q2 = d2 / w2;
     // 外圈按 seg 一段亮一段暗；内圈按自己的 seg2，大半直接没有
     let g = (q1 * q1 < 9 ? Math.exp(-q1 * q1) * rp.a1 * seg : 0)
@@ -146,7 +147,9 @@ function rippleAt(x, y) {
     const inside = Math.max(0, Math.min(1, (R1 + 20 - dist) / 60));
     if (inside > 0) {
       g = Math.max(g, rp.fill * inside * seg);
-      if (rp.conv * inside > rippleConv) rippleConv = rp.conv * inside;
+      // 灰烟染蓝只在外圈附近一带（被圈推着走的那道灰字变蓝）；圈里面留下的路径保持灰色
+      const near = inside * Math.max(0, 1 - Math.abs(dist - R1) / 110);
+      if (rp.conv * near > rippleConv) rippleConv = rp.conv * near;
     }
     // 越到后面越碎：按细碎噪声把圈打出缺口，一段段散开
     const brk = Math.max(0, Math.min(1.6, streak * 3 - 0.9)) * 0.7 + Math.max(0, Math.min(1.5, rag * 2.4 - 0.55)) * 0.3;
