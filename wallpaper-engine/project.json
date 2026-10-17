@@ -9,67 +9,69 @@
   "general": {
     "supportsaudioprocessing": false,
     "properties": {
-      "glowcolor": {
-        "order": 100,
-        "text": "光带颜色",
-        "type": "color",
-        "value": "0.157 0.455 0.643"
-      },
-      "textcolor": {
-        "order": 101,
-        "text": "字符颜色",
-        "type": "color",
-        "value": "0.169 0.169 0.169"
-      },
       "bgcolor": {
-        "order": 102,
-        "text": "背景颜色",
+        "order": 100,
+        "text": "字符 · 背景颜色",
         "type": "color",
         "value": "0.078 0.078 0.078"
       },
-      "speed": {
-        "order": 103,
-        "text": "扩散速度",
-        "type": "slider",
-        "min": 0,
-        "max": 200,
-        "value": 60
+      "textcolor": {
+        "order": 101,
+        "text": "字符 · 字符颜色",
+        "type": "color",
+        "value": "0.169 0.169 0.169"
       },
-      "patternsize": {
-        "order": 104,
-        "text": "扩散范围",
+      "charsize": {
+        "order": 102,
+        "text": "字符 · 字符大小",
         "type": "slider",
-        "min": 10,
-        "max": 150,
-        "value": 50
-      },
-      "bandwidth": {
-        "order": 105,
-        "text": "光带粗细",
-        "type": "slider",
-        "min": 10,
-        "max": 90,
-        "value": 40
-      },
-      "flicker": {
-        "order": 106,
-        "text": "字符闪烁",
-        "type": "slider",
-        "min": 0,
-        "max": 100,
-        "value": 20
+        "min": 60,
+        "max": 160,
+        "value": 100
       },
       "density": {
-        "order": 107,
-        "text": "字符密度",
+        "order": 103,
+        "text": "字符 · 字符密度",
         "type": "slider",
         "min": 10,
         "max": 100,
         "value": 100
       },
+      "flicker": {
+        "order": 104,
+        "text": "字符 · 字符闪烁",
+        "type": "slider",
+        "min": 0,
+        "max": 100,
+        "value": 20
+      },
+      "smokeamount": {
+        "order": 105,
+        "text": "背景烟雾 · 烟雾量",
+        "type": "slider",
+        "min": 10,
+        "max": 95,
+        "value": 40
+      },
+      "flowspeed": {
+        "order": 106,
+        "text": "背景烟雾 · 流动速度",
+        "type": "slider",
+        "min": 10,
+        "max": 300,
+        "value": 100
+      },
+      "backgroundcontrast": {
+        "order": 107,
+        "text": "背景烟雾 · 对比度",
+        "type": "slider",
+        "min": 50,
+        "max": 180,
+        "value": 100
+      },
       "hoverradius": {
         "order": 108,
-        "text": "鼠标影响范围",
+        "text": "鼠标滑动 · 影响范围",
         "type": "slider",
         "min": 20,
         "max": 300,
@@ -77,107 +79,105 @@
       },
       "hoverstrength": {
         "order": 109,
-        "text": "鼠标显现程度",
+        "text": "鼠标滑动 · 显现程度",
         "type": "slider",
         "min": 0,
         "max": 100,
         "value": 60
-      },
-      "charsize": {
-        "order": 111,
-        "text": "字符大小",
-        "type": "slider",
-        "min": 60,
-        "max": 160,
-        "value": 100
-      },
-      "flowspeed": {
-        "order": 112,
-        "text": "流动速度",
-        "type": "slider",
-        "min": 10,
-        "max": 300,
-        "value": 100
-      },
-      "smokeamount": {
-        "order": 113,
-        "text": "烟雾量",
-        "type": "slider",
-        "min": 10,
-        "max": 95,
-        "value": 40
-      },
-      "swirlmode": {
-        "order": 114,
-        "text": "鼠标卷入模式",
-        "type": "bool",
-        "value": false
-      },
-      "clickripples": {
-        "order": 120,
-        "text": "点击字符圆环",
-        "type": "bool",
-        "value": true
-      },
-      "backgroundcontrast": {
-        "order": 121,
-        "text": "背景对比度",
-        "type": "slider",
-        "min": 50,
-        "max": 180,
-        "value": 100
-      },
-      "rippleradius": {
-        "order": 122,
-        "text": "圆环半径",
-        "type": "slider",
-        "min": 40,
-        "max": 180,
-        "value": 100
-      },
-      "ripplelife": {
-        "order": 123,
-        "text": "圆环持续时间",
-        "type": "slider",
-        "min": 20,
-        "max": 100,
-        "value": 60
-      },
-      "ripplestrength": {
-        "order": 124,
-        "text": "圆环亮度",
-        "type": "slider",
-        "min": 0,
-        "max": 200,
-        "value": 100
       },
       "mousefill": {
-        "order": 129,
-        "text": "鼠标滑动填充比例",
+        "order": 110,
+        "text": "鼠标滑动 · 填充比例",
         "type": "slider",
         "min": 0,
         "max": 150,
         "value": 100
       },
-      "ripplescatter": {
-        "order": 125,
-        "text": "圆环分散度",
-        "type": "slider",
-        "min": 0,
-        "max": 200,
-        "value": 100
-      },
       "fogfade": {
-        "order": 126,
-        "text": "鼠标雾消散时间（0.1 秒）",
+        "order": 111,
+        "text": "鼠标滑动 · 消散时间（0.1 秒）",
         "type": "slider",
         "min": 2,
         "max": 50,
         "value": 25
       },
+      "swirlmode": {
+        "order": 112,
+        "text": "鼠标滑动 · 卷入模式",
+        "type": "bool",
+        "value": false
+      },
+      "clickripples": {
+        "order": 113,
+        "text": "点击圆环 · 开启",
+        "type": "bool",
+        "value": true
+      },
+      "glowcolor": {
+        "order": 114,
+        "text": "点击圆环 · 颜色",
+        "type": "color",
+        "value": "0.157 0.455 0.643"
+      },
+      "rippleradius": {
+        "order": 115,
+        "text": "点击圆环 · 半径",
+        "type": "slider",
+        "min": 40,
+        "max": 180,
+        "value": 100
+      },
+      "patternsize": {
+        "order": 116,
+        "text": "点击圆环 · 扩散范围",
+        "type": "slider",
+        "min": 10,
+        "max": 150,
+        "value": 50
+      },
+      "speed": {
+        "order": 117,
+        "text": "点击圆环 · 扩散速度",
+        "type": "slider",
+        "min": 0,
+        "max": 200,
+        "value": 60
+      },
+      "ripplelife": {
+        "order": 118,
+        "text": "点击圆环 · 持续时间",
+        "type": "slider",
+        "min": 20,
+        "max": 100,
+        "value": 60
+      },
+      "bandwidth": {
+        "order": 119,
+        "text": "点击圆环 · 粗细",
+        "type": "slider",
+        "min": 10,
+        "max": 90,
+        "value": 40
+      },
+      "ripplestrength": {
+        "order": 120,
+        "text": "点击圆环 · 亮度",
+        "type": "slider",
+        "min": 0,
+        "max": 200,
+        "value": 100
+      },
+      "ripplescatter": {
+        "order": 121,
+        "text": "点击圆环 · 分散度",
+        "type": "slider",
+        "min": 0,
+        "max": 200,
+        "value": 100
+      },
       "ripplewind": {
-        "order": 127,
-        "text": "圆环带动烟雾",
+        "order": 122,
+        "text": "点击圆环 · 带动烟雾",
         "type": "slider",
         "min": 0,
         "max": 200,
