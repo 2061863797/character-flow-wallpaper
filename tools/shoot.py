@@ -35,6 +35,12 @@ SCENES = {
         shots=[60 + k for k in (12, 24, 36, 48)],
         video=[],
         crop=(812, 306, 920, 800), scale=0.6),
+    # 在一块区域里反复来回划 3 秒，把雾铺满：检查「滑动填充比例」调满时还有没有填不上的空洞
+    'fill': dict(
+        actions={i: ('move', 900 + 760 * (0.5 + 0.5 * np.sin(i / 3.1)), 400 + 600 * (0.5 + 0.5 * np.sin(i / 17.3))) for i in range(0, 180)},
+        shots=[180],
+        video=[],
+        crop=(980, 460, 600, 480), scale=1.0),
     # 视频 0.75～2.2 秒的一次滑动和之后的消散
     'stroke': dict(
         actions='stroke',
