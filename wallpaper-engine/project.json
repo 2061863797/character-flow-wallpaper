@@ -95,11 +95,11 @@
       },
       "fogfade": {
         "order": 111,
-        "text": "鼠标滑动 · 消散时间（0.1 秒）",
+        "text": "鼠标滑动 · 消散时间（越大越久）",
         "type": "slider",
-        "min": 2,
-        "max": 50,
-        "value": 40
+        "min": 10,
+        "max": 200,
+        "value": 100
       },
       "swirlmode": {
         "order": 112,

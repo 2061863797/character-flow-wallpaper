@@ -52,7 +52,8 @@ function frame(now) {
         }
       }
       const gxs = gx + rowOff[r] / SIM;
-      const smoke = Math.max(sample(D, gxs, gy), CONFIG.swirlMode ? ms : 0);
+      // 背景烟 + 被点击圆环带着走的那部分灰字
+      const smoke = Math.max(sample(D, gxs, gy) + sample(C, gxs, gy), CONFIG.swirlMode ? ms : 0);
       // 点击扩散的格子闪得更快、更密
       if (Math.random() < CONFIG.flicker * (1 + glow * 4)) {
         const density = lerp(CONFIG.baseDensity, 1, glow);

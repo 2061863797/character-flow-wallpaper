@@ -10,8 +10,9 @@ let SIM = 8;                        // 每个模拟格边长（页面像素）�
 //   RG     边缘细碎扰动                        HZ 烟带外围薄雾
 //   PSI    背景旋涡                            P、DIV 投影步骤的中间结果
 //   RU, RV 点击圆环推烟的速度（不参与投影，直接把烟往外推）
-//   PM     这一格最近被圆环推过的程度（推过的地方暂停补烟，烟才真的被推走）
-let NX, NY, U, V, U2, V2, D, D2, M, FT, RG, HZ, SN, P, DIV, PSI, RU, RV, PM;
+//   PM     这一帧点击圆环在这一格的覆盖程度（0～1，圈前沿最大）
+//   C      被点击圆环带着一起往外扩散的那部分灰字
+let NX, NY, U, V, U2, V2, D, D2, M, FT, RG, HZ, SN, P, DIV, PSI, RU, RV, PM, C;
 let bgLo = 0.48, bgHi = 0.9;   // 烟源门槛和最浓处：都按整屏分布自动调节，烟的多少和浓淡始终稳定
 let cvLo = 0.48, cvHi = 0.9;   // coverThreshold() 算出的目标门槛，bgLo/bgHi 慢慢向它靠拢
 const SN_HIST = new Uint32Array(256);
@@ -30,7 +31,7 @@ function initSmoke() {
   U = new Float32Array(n); V = new Float32Array(n); U2 = new Float32Array(n); V2 = new Float32Array(n);
   D = new Float32Array(n); D2 = new Float32Array(n); M = new Float32Array(n); FT = new Float32Array(n); RG = new Float32Array(n); HZ = new Float32Array(n); SN = new Float32Array(n); P = new Float32Array(n); DIV = new Float32Array(n);
   PSI = new Float32Array(n);
-  RU = new Float32Array(n); RV = new Float32Array(n); PM = new Float32Array(n);
+  RU = new Float32Array(n); RV = new Float32Array(n); PM = new Float32Array(n); C = new Float32Array(n);
   // 先把整屏的气流纹理算一遍，直接定好门槛，再预热几秒，打开时烟已经铺开
   // 预热 2 秒，时间正好结束在当前时刻，接上之后的真实画面（不会出现重影）
   const now0 = performance.now() / 1000, warm = 60;
@@ -156,16 +157,15 @@ function mouseSmoke(dt, sec) {
   }
 }
 
-// 点击圆环推烟：圈往外扩散时，像推土机一样把前面的灰烟和鼠标雾一起往外推，并顺着圈卷出小旋涡。
-// 这股推力不能放进风场 U,V：投影那一步会把「从一点往外散」的流动几乎全部抵消掉，
-// 所以单独存成 RU,RV，在平流之后再把烟按它搬一次。返回这一帧有没有推力。
+// 点击圆环带走一部分灰字：圈经过时，从原地的灰字（背景烟、鼠标雾）里分出一部分交给 C，C 随着圈一起往外扩散，
+// 剩下的留在原地，被圈点亮（灰字是「传递」圈的介质）。这里算出圈前沿的移动速度 RU,RV 和这一帧圈的覆盖程度 PM。
+// 这股速度不能放进风场 U,V：投影那一步会把「从一点往外散」的流动几乎全部抵消掉。返回这一帧有没有圈在动。
 function ringPush(dt) {
+  PM.fill(0);
   const K = CONFIG.rippleWind;
   if (K <= 0 || !CONFIG.rippleEnabled) return false;
   let any = false;
   RU.fill(0); RV.fill(0);
-  const decay = Math.exp(-dt / 0.6);
-  for (let i = 0; i < PM.length; i++) PM[i] *= decay;
   for (const rp of ripples) {
     if (!rp.alive || rp.v1 === undefined) continue;
     // 推的速度 = 圈前沿的速度（格/秒）× 强度：强度 1 时圈前面的烟正好被圈赶着走，堆成一道灰色的浪头
@@ -197,18 +197,14 @@ function ringPush(dt) {
   return any;
 }
 
-// 按 RU,RV 把烟「整份搬走」：每格的烟往前挪，按落点分给周围 4 格（总量不变）。
-// 不能用平流那种往上游取值的做法：那样只会把烟拉长铺开，圈扫过的地方不会变空，也堆不出浪头
+// 按 RU,RV 把 C 里的灰字「整份搬走」：每格往前挪，按落点分给周围 4 格（总量不变）。
+// 不能用平流那种往上游取值的做法：那样只会把灰字拉长铺开，不会跟着圈一起走
 function pushField(dst, src, dt) {
   dst.fill(0);
   for (let y = 1; y < NY - 1; y++) for (let x = 1; x < NX - 1; x++) {
-    const i = IX(x, y), a = src[i];
-    if (a === 0) continue;
-    if (!RU[i] && !RV[i]) { dst[i] += a; continue; }
-    // 只带走一部分，剩下的留在原地：圈一路走一路「漏」烟，经过的地方留下一道灰字，显出圈走过的路径
-    const stay = a * (1 - CONFIG.ripplePushShare);
-    dst[i] += stay;
-    const m = a - stay;
+    const i = IX(x, y), m = src[i];
+    if (m === 0) continue;
+    if (!RU[i] && !RV[i]) { dst[i] += m; continue; }
     const fx = Math.max(1, Math.min(NX - 2.001, x + RU[i] * dt)), fy = Math.max(1, Math.min(NY - 2.001, y + RV[i] * dt));
     const x0 = fx | 0, y0 = fy | 0, ax = fx - x0, ay = fy - y0, j = IX(x0, y0);
     dst[j] += m * (1 - ax) * (1 - ay); dst[j + 1] += m * ax * (1 - ay);
@@ -290,7 +286,7 @@ function stepSmoke(dt, sec) {
     const n = SN[i] = streakNoise((x - 0.5) * SIM, (y - 0.5) * SIM, sec);
     const k = Math.max(0, Math.min(1, (n - bgLo) / Math.max(0.03, (bgHi - bgLo) * CONFIG.bgEdge)));
     const s = k * k * (3 - 2 * k);
-    if (s > D[i]) D[i] += (s - D[i]) * feed * (1 - PM[i]);   // 刚被圆环推过的地方先不补烟
+    if (s > D[i]) D[i] += (s - D[i]) * feed * (1 - PM[i] * 0.5);   // 圈正经过的地方补得慢一些，被带走的那部分不会立刻补回来
   }
   // 自动稳定烟量：找出「让烟源覆盖率等于设定值」的门槛，门槛慢慢靠过去（一两秒），画面里的烟不会忽多忽少
   coverThreshold();
@@ -301,13 +297,13 @@ function stepSmoke(dt, sec) {
   advect(D2, D, dt);
   // 化开得慢一点，旋涡和烟缕才保得住；网格变粗时按比例减小，保证在屏幕上化开的快慢不变
   const spread = Math.min(0.5, dt * 0.35 * (8 / SIM) * (8 / SIM));
-  // 离开烟源的烟很快淡掉，只留短短的烟尾；被圆环推着走的烟淡得慢一些，才看得出被推出去
+  // 离开烟源的烟很快淡掉，只留短短的烟尾
+  const keep = Math.exp(-dt / 0.9);
   for (let y = 1; y < NY - 1; y++) for (let x = 1; x < NX - 1; x++) {
     const i = IX(x, y);
     const nb = (D2[i - 1] + D2[i + 1] + D2[i - NX] + D2[i + NX]) * 0.25;
-    D[i] = lerp(D2[i], nb, spread) * Math.exp(-dt / (0.9 * (1 + 1.5 * PM[i])));
+    D[i] = lerp(D2[i], nb, spread) * keep;
   }
-  if (pushing) { pushField(D2, D, dt); [D, D2] = [D2, D]; }
   // 鼠标的烟：同样被风带走、化开，但约 2 秒才淡掉，整条路径都看得到
   advect(D2, M, dt);
   // 鼠标雾大约 fogFade 秒散完（衰减到约 8%，看不见了）；卷入模式要留着让旋涡卷，固定 2.8 秒的时间常数
@@ -317,7 +313,19 @@ function stepSmoke(dt, sec) {
     const nb = (D2[i - 1] + D2[i + 1] + D2[i - NX] + D2[i + NX]) * 0.25;
     M[i] = lerp(D2[i], nb, Math.min(0.5, spread * (CONFIG.swirlMode ? 0.5 : CONFIG.fogSpread))) * keepM;
   }
-  if (pushing) { pushField(D2, M, dt); [M, D2] = [D2, M]; }
+  // 圈经过时，从原地的灰字（背景烟 D、鼠标雾 M）里分出一部分交给 C，C 跟着圈往外走；圈慢下来、淡下去后 C 慢慢散掉
+  if (pushing) {
+    const rate = CONFIG.rippleCapture * dt;
+    for (let i = 0; i < C.length; i++) {
+      if (PM[i] === 0) continue;
+      const k = Math.min(1, PM[i] * rate);
+      const a = D[i] * k, b = M[i] * k;
+      D[i] -= a; M[i] -= b; C[i] += a + b;
+    }
+    pushField(D2, C, dt); [C, D2] = [D2, C];
+  }
+  const keepC = Math.exp(-dt / 1.2);
+  for (let i = 0; i < C.length; i++) C[i] *= keepC;
   // 雾里的纹理只在有雾的格子算，按模拟格算一次，画字时直接查表（比每个字单独算快很多）
   if (!CONFIG.swirlMode)
     for (let y = 1; y < NY - 1; y++) for (let x = 1; x < NX - 1; x++) {
