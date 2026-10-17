@@ -23,7 +23,7 @@ function buildAtlas() {
   // 1) 字形模板：白字黑底渲染每个字，只记下有墨的像素（位置 + 墨量 0~255）
   const cv = document.createElement('canvas'); cv.width = GW; cv.height = GH;
   const a = cv.getContext('2d', { willReadFrequently: true });
-  a.font = `${CONFIG.fontSize * dpr}px Consolas, "Cascadia Mono", monospace`;
+  a.font = `${CONFIG.fontSize * dpr}px ${CONFIG.fontFamily}`;
   a.textBaseline = 'middle'; a.textAlign = 'center'; a.fillStyle = '#fff';
   const pix = [], al = [];
   glyphOff = new Int32Array(LETTERS.length + 1);

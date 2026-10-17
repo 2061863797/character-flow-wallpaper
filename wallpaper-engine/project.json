@@ -91,7 +91,7 @@
         "type": "slider",
         "min": 0,
         "max": 150,
-        "value": 120
+        "value": 130
       },
       "fogfade": {
         "order": 111,
@@ -99,7 +99,7 @@
         "type": "slider",
         "min": 2,
         "max": 50,
-        "value": 25
+        "value": 40
       },
       "swirlmode": {
         "order": 112,
