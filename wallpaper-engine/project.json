@@ -19,7 +19,7 @@
         "order": 101,
         "text": "字符 · 字符颜色",
         "type": "color",
-        "value": "0.169 0.169 0.169"
+        "value": "0.180 0.180 0.180"
       },
       "charsize": {
         "order": 102,
@@ -117,7 +117,7 @@
         "order": 114,
         "text": "点击圆环 · 颜色",
         "type": "color",
-        "value": "0.157 0.455 0.643"
+        "value": "0.290 0.486 0.643"
       },
       "rippleradius": {
         "order": 115,
@@ -149,7 +149,7 @@
         "type": "slider",
         "min": 0,
         "max": 200,
-        "value": 100
+        "value": 140
       },
       "ripplescatter": {
         "order": 119,
