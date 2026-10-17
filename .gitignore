@@ -1,0 +1,16 @@
+# 参考视频体积大，不进版本库
+*.mp4
+
+# 以前的对比截图（根目录）
+/*.jpg
+/*.png
+
+# 测试工具生成的录制帧和对比结果
+out/
+
+# 备份和工具缓存
+backup/
+.playwright-mcp/
+.pixelprobe-mcp/
+__pycache__/
+node_modules/

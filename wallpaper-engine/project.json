@@ -1,0 +1,216 @@
+{
+  "file": "index.html",
+  "title": "字符流光 Character Flow",
+  "description": "满屏细小字符组成的烟雾：大片灰色烟雾随风缓缓飘散；鼠标划过会放出新的烟并搅动气流，点击时彩色光圈扩散开。颜色、风速、烟量都可调。",
+  "type": "web",
+  "tags": [
+    "Abstract"
+  ],
+  "general": {
+    "supportsaudioprocessing": false,
+    "properties": {
+      "glowcolor": {
+        "order": 100,
+        "text": "光带颜色",
+        "type": "color",
+        "value": "0.157 0.455 0.643"
+      },
+      "textcolor": {
+        "order": 101,
+        "text": "字符颜色",
+        "type": "color",
+        "value": "0.169 0.169 0.169"
+      },
+      "bgcolor": {
+        "order": 102,
+        "text": "背景颜色",
+        "type": "color",
+        "value": "0.078 0.078 0.078"
+      },
+      "speed": {
+        "order": 103,
+        "text": "扩散速度",
+        "type": "slider",
+        "min": 0,
+        "max": 200,
+        "value": 60
+      },
+      "patternsize": {
+        "order": 104,
+        "text": "扩散范围",
+        "type": "slider",
+        "min": 10,
+        "max": 150,
+        "value": 50
+      },
+      "bandwidth": {
+        "order": 105,
+        "text": "光带粗细",
+        "type": "slider",
+        "min": 10,
+        "max": 90,
+        "value": 40
+      },
+      "flicker": {
+        "order": 106,
+        "text": "字符闪烁",
+        "type": "slider",
+        "min": 0,
+        "max": 100,
+        "value": 20
+      },
+      "density": {
+        "order": 107,
+        "text": "字符密度",
+        "type": "slider",
+        "min": 10,
+        "max": 100,
+        "value": 100
+      },
+      "hoverradius": {
+        "order": 108,
+        "text": "鼠标影响范围",
+        "type": "slider",
+        "min": 20,
+        "max": 300,
+        "value": 90
+      },
+      "hoverstrength": {
+        "order": 109,
+        "text": "鼠标显现程度",
+        "type": "slider",
+        "min": 0,
+        "max": 100,
+        "value": 60
+      },
+      "ambient": {
+        "order": 110,
+        "text": "自动漂移光带",
+        "type": "bool",
+        "value": false
+      },
+      "charsize": {
+        "order": 111,
+        "text": "字符大小",
+        "type": "slider",
+        "min": 60,
+        "max": 160,
+        "value": 100
+      },
+      "flowspeed": {
+        "order": 112,
+        "text": "流动速度",
+        "type": "slider",
+        "min": 10,
+        "max": 300,
+        "value": 100
+      },
+      "smokeamount": {
+        "order": 113,
+        "text": "烟雾量",
+        "type": "slider",
+        "min": 10,
+        "max": 95,
+        "value": 40
+      },
+      "swirlmode": {
+        "order": 114,
+        "text": "鼠标卷入模式",
+        "type": "bool",
+        "value": false
+      },
+      "trailenabled": {
+        "order": 115,
+        "text": "鼠标悬停光环",
+        "type": "bool",
+        "value": false
+      },
+      "trailradius": {
+        "order": 116,
+        "text": "光环半径",
+        "type": "slider",
+        "min": 20,
+        "max": 220,
+        "value": 82
+      },
+      "trailstrength": {
+        "order": 117,
+        "text": "光环亮度",
+        "type": "slider",
+        "min": 0,
+        "max": 100,
+        "value": 82
+      },
+      "traillife": {
+        "order": 118,
+        "text": "光环动画速度",
+        "type": "slider",
+        "min": 10,
+        "max": 100,
+        "value": 58
+      },
+      "trailsoftness": {
+        "order": 119,
+        "text": "光环柔化",
+        "type": "slider",
+        "min": 0,
+        "max": 100,
+        "value": 62
+      },
+      "clickripples": {
+        "order": 120,
+        "text": "点击字符圆环",
+        "type": "bool",
+        "value": true
+      },
+      "backgroundcontrast": {
+        "order": 121,
+        "text": "背景对比度",
+        "type": "slider",
+        "min": 50,
+        "max": 180,
+        "value": 100
+      },
+      "rippleradius": {
+        "order": 122,
+        "text": "圆环半径",
+        "type": "slider",
+        "min": 40,
+        "max": 180,
+        "value": 100
+      },
+      "ripplelife": {
+        "order": 123,
+        "text": "圆环持续时间",
+        "type": "slider",
+        "min": 20,
+        "max": 100,
+        "value": 60
+      },
+      "ripplestrength": {
+        "order": 124,
+        "text": "圆环亮度",
+        "type": "slider",
+        "min": 0,
+        "max": 200,
+        "value": 100
+      },
+      "mousefill": {
+        "order": 129,
+        "text": "鼠标滑动填充比例",
+        "type": "slider",
+        "min": 0,
+        "max": 150,
+        "value": 100
+      },
+      "heartchance": {
+        "order": 130,
+        "text": "爱心圆环出现概率",
+        "type": "slider",
+        "min": 0,
+        "max": 100,
+        "value": 33
+      }
+    }
+  }
+}
