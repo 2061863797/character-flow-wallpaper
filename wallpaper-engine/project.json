@@ -1,5 +1,6 @@
 {
   "file": "index.html",
+  "preview": "preview.jpg",
   "title": "字符流光 Character Flow",
   "description": "满屏细小字符组成的烟雾：大片灰色烟雾随风缓缓飘散；鼠标划过会放出新的烟并搅动气流，点击时彩色光圈扩散开。颜色、风速、烟量都可调。",
   "type": "web",
