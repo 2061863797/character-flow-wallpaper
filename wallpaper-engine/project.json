@@ -43,7 +43,7 @@
         "type": "slider",
         "min": 0,
         "max": 100,
-        "value": 20
+        "value": 90
       },
       "smokeamount": {
         "order": 105,
@@ -51,7 +51,7 @@
         "type": "slider",
         "min": 10,
         "max": 95,
-        "value": 40
+        "value": 20
       },
       "flowspeed": {
         "order": 106,
@@ -75,7 +75,7 @@
         "type": "slider",
         "min": 20,
         "max": 300,
-        "value": 90
+        "value": 120
       },
       "hoverstrength": {
         "order": 109,
@@ -91,7 +91,7 @@
         "type": "slider",
         "min": 0,
         "max": 150,
-        "value": 100
+        "value": 120
       },
       "fogfade": {
         "order": 111,
