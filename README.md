@@ -2,6 +2,8 @@
 
 一款 [Wallpaper Engine](https://store.steampowered.com/app/431960/) 网页壁纸：满屏细小字符组成的烟雾，随风缓缓往右下飘。
 
+**在线试玩：<https://2061863797.github.io/character-flow-wallpaper/>**（不用安装，打开网页就能移动鼠标、点击体验）
+
 ![预览](wallpaper-engine/preview.jpg)
 
 ## 效果
