@@ -41,16 +41,15 @@ function buildAtlas() {
   // 2) 颜色表：每种「灰度级 × 蓝色级 × 墨量」直接查出最终像素颜色（字和背景按墨量混合）
   colorLUT = new Uint32Array(GRAY_LEVELS * GLOW_LEVELS * 256);
   const bg = CONFIG.bg, glow = CONFIG.glow;
-  const glowSpan = Math.max(1, ...glow.map((v, i) => v - bg[i]));
   for (let g = 0; g < GRAY_LEVELS; g++) {
     const gray = grayAt(g / (GRAY_LEVELS - 1));
-    const gr = Math.max(0, ...gray.map((v, i) => v - bg[i])) / glowSpan;   // 这一级灰有多亮（换算成蓝光强度）
     for (let b = 0; b < GLOW_LEVELS; b++) {
       const t = b / (GLOW_LEVELS - 1);
-      // 被蓝圈照到的字整个变成蓝色调，不是在灰上叠一层蓝（否则烟里的字还是灰的，对照视频：圈上的字都是蓝的）。
-      // m = 换色程度：蓝光一弱就开始换，稍强一点就完全换成蓝；原来的灰亮度折算成蓝光保留下来，烟里的蓝字更亮
+      // 被圆环照到的字只用圆环的颜色和亮度，原来的灰色淡出、不折算进去（对照视频：圈上的字都是蓝的）。
+      // 灰色的亮度不能算进圆环：否则字符换成亮色时，灰字亮暗不一，圈经过的地方会一闪一闪。
+      // m = 换色程度：圆环一弱就开始换，稍强一点就完全是圆环的颜色
       const m = Math.min(1, t * 6);
-      const c = gray.map((v, i) => Math.min(255, bg[i] + (glow[i] - bg[i]) * (t + gr * 0.85 * m) + (v - bg[i]) * (1 - m)));
+      const c = gray.map((v, i) => Math.min(255, bg[i] + (glow[i] - bg[i]) * t + (v - bg[i]) * (1 - m)));
       const base = (g * GLOW_LEVELS + b) * 256;
       for (let k = 0; k < 256; k++) {
         const f = k / 255;

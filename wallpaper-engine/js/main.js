@@ -53,8 +53,7 @@ function frame(now) {
         }
       }
       const gxs = gx + rowOff[r] / SIM;
-      // 背景烟 + 被点击圆环带着走的那部分灰字
-      const smoke = Math.max(sample(D, gxs, gy) + sample(C, gxs, gy), CONFIG.swirlMode ? ms : 0);
+      const smoke = Math.max(sample(D, gxs, gy), CONFIG.swirlMode ? ms : 0);
       // 点击扩散的格子闪得更快、更密
       if (Math.random() < CONFIG.flicker * (1 + glow * 4)) {
         const density = lerp(CONFIG.baseDensity, 1, glow);
@@ -95,7 +94,9 @@ function frame(now) {
       // 按平滑的浓度来染，不按每个字自己的亮度——否则原本稀疏、忽明忽暗的字会被一个个点亮，显得突兀
       const dens = Math.max(sk, CONFIG.swirlMode ? 0 : Math.min(1, ms * 2.2), hz * 0.4);
       // 圈是「通过灰字传递」的：灰字不动，圈经过时把它们点亮。有灰字的地方圈亮，空白处的圈只剩 rippleCarry 那么淡
-      if (hasRipple) glow *= CONFIG.rippleCarry + (1 - CONFIG.rippleCarry) * Math.min(1, dens * 2.5);
+      // 被圈带着走的那部分灰字（C）只算作「这里有字可亮」：显示成圆环本身的颜色和亮度，不叠加灰色、不额外增亮
+      // （叠加的话两份灰字重合处会忽明忽暗，换成亮色字时很明显）
+      if (hasRipple) glow *= CONFIG.rippleCarry + (1 - CONFIG.rippleCarry) * Math.min(1, Math.max(dens, sample(C, gxs, gy)) * 2.5);
       if (hasRipple && ripCv > 0 && dens > 0) {
         glow = Math.min(1, glow + dens * 0.4 * ripCv * CONFIG.rippleStrength);
         smokeVis *= 1 - ripCv;
