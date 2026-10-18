@@ -8,6 +8,13 @@
 # 测试工具生成的录制帧和对比结果
 out/
 
+# 复刻过程用的测试脚本、视频数据和项目过程文件：只留在本机，公开仓库只放壁纸本体
+tools/
+reference/
+probe/
+CLAUDE.md
+PROJECT.md
+
 # 备份和工具缓存
 backup/
 .playwright-mcp/
