@@ -102,6 +102,8 @@ function layoutChars() {
 }
 
 function resize() {
+  // 网页版把壁纸嵌在首页里，刚加载时这一层可能还没有尺寸：先不建画布，等真正有了尺寸（会再触发 resize）再建
+  if (!innerWidth || !innerHeight) return;
   dpr = window.devicePixelRatio || 1;
   canvas.width = Math.round(innerWidth * dpr);
   canvas.height = Math.round(innerHeight * dpr);

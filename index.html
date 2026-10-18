@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>字符流光 Character Flow</title>
+<meta name="description" content="字符组成的烟雾壁纸：移动鼠标搅出字雾，点击出现扩散的圆环。可下载为 Wallpaper Engine 壁纸。">
+<meta property="og:title" content="字符流光 Character Flow">
+<meta property="og:description" content="字符组成的烟雾：移动鼠标搅出字雾，点击出现扩散的圆环。">
+<meta property="og:image" content="wallpaper-engine/preview.jpg">
+<link rel="icon" href="wallpaper-engine/preview.jpg">
+<style>
+  :root { --bg: #141414; --fg: #c9d4dc; --dim: #7d8a94; --accent: #6fa6cf; }
+  html, body { margin: 0; height: 100%; background: var(--bg); overflow: hidden; }
+  iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
+  /* 提示卡片：不挡鼠标（pointer-events: none），只有链接能点 */
+  .card {
+    position: fixed; left: 16px; bottom: 16px; max-width: min(360px, calc(100vw - 32px));
+    padding: 14px 16px; border-radius: 10px; box-sizing: border-box;
+    background: rgba(20, 20, 20, 0.72); border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    color: var(--fg); font: 14px/1.6 system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+    pointer-events: none; transition: opacity 0.8s ease;
+  }
+  .card.hide { opacity: 0.35; }
+  .card.hide:hover { opacity: 1; }
+  .card h1 { margin: 0 0 4px; font-size: 16px; font-weight: 600; letter-spacing: 0.02em; }
+  .card p { margin: 0; color: var(--dim); }
+  .card a { pointer-events: auto; color: var(--accent); text-decoration: none; }
+  .card a:hover { text-decoration: underline; }
+  .card .links { margin-top: 8px; display: flex; gap: 14px; flex-wrap: wrap; }
+  .card .note { margin-top: 8px; font-size: 12px; }
+</style>
+</head>
+<body>
+<iframe src="wallpaper-engine/index.html" title="字符流光 壁纸效果"></iframe>
+<div class="card" id="card">
+  <h1>字符流光 Character Flow</h1>
+  <p>移动鼠标，在同一处来回划会搅出字雾；点击试试会出现扩散的圆环。</p>
+  <div class="links">
+    <a href="https://github.com/2061863797/character-flow-wallpaper" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://github.com/2061863797/character-flow-wallpaper/archive/refs/heads/main.zip">下载 Wallpaper Engine 壁纸</a>
+  </div>
+  <p class="note">灵感来自 Claude 桌面应用的背景动画，非官方作品。</p>
+</div>
+<script>
+  // 8 秒后提示卡片变淡（不完全消失，链接一直能点；鼠标移到链接上时恢复清楚）
+  setTimeout(() => document.getElementById('card').classList.add('hide'), 8000);
+</script>
+</body>
+</html>

@@ -4,9 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>字符流光</title>
+<!-- 字体：电脑上没装 Ubuntu Mono 时从网上加载（离线时加载失败也没关系，会退回 Consolas） -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=block">
 <style>
-  html, body { margin: 0; height: 100%; background: #1a1a1a; overflow: hidden; }
-  canvas { display: block; width: 100vw; height: 100vh; }
+  html, body { margin: 0; height: 100%; background: #141414; overflow: hidden; }
+  canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
 </style>
 </head>
 <body>
@@ -19,5 +22,9 @@
 <script src="js/ripple.js"></script>
 <script src="js/settings.js"></script>
 <script src="js/main.js"></script>
+<script>
+  // 网上的字体下载完以后，用它重新生成一次字形（一开始画的是备用字体）
+  if (document.fonts) document.fonts.load('10px "Ubuntu Mono"').then(() => { if (atlas) buildAtlas(); }).catch(() => {});
+</script>
 </body>
 </html>

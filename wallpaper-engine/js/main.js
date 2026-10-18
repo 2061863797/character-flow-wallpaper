@@ -2,6 +2,7 @@
 let last = 0, rowOff, ripG = 0, ripGr = 0, ripCv = 0;
 function frame(now) {
   requestAnimationFrame(frame);
+  if (!atlas) { if (innerWidth && innerHeight) resize(); return; }   // 画布还没建好（窗口尺寸还是 0）
   // 限帧：留 2 毫秒余量。60Hz 屏幕两帧间隔加起来≈33.33ms，严格比较会因为小数误差被跳过，30 帧实际只剩 20 帧
   if (CONFIG.fps > 0 && now - last < 1000 / CONFIG.fps - 2) return;
   const dt = Math.min(0.1, (now - last) / 1000);
